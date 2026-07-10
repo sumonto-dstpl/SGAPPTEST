@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote } from 'lucide-react';
+import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { Garage } from '../types';
 import Modal from '../components/Modal';
@@ -320,6 +320,7 @@ export default function Garages() {
   const [showAdd, setShowAdd] = useState(false);
   const [viewGarage, setViewGarage] = useState<Garage | null>(null);
   const [editGarage, setEditGarage] = useState<Garage | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [collecting, setCollecting] = useState<string | null>(null);
 
   const handleCollect = async (garage: Garage) => {
@@ -456,15 +457,34 @@ export default function Garages() {
                       <button
                         onClick={() => handleCollect(garage)}
                         disabled={collecting === garage.id}
-                        className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap"
                       >
                         <Banknote size={13} />
                         {collecting === garage.id ? '...' : 'Collect'}
                       </button>
                     )}
-                    <button onClick={() => setViewGarage(garage)} className="px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">View</button>
-                    <button onClick={() => setEditGarage(garage)} className="px-2.5 py-1 text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors">Edit</button>
-                    <button onClick={() => handleDelete(garage.id)} className="px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Delete</button>
+                    <div className="relative">
+                      <button onClick={() => setMenuOpen(menuOpen === garage.id ? null : garage.id)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
+                        <MoreHorizontal size={16} />
+                      </button>
+                      {menuOpen === garage.id && (
+                        <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
+                          <button onClick={() => { setViewGarage(garage); setMenuOpen(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                            <Eye size={14} /> View
+                          </button>
+                          <button onClick={() => { setEditGarage(garage); setMenuOpen(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                            <Pencil size={14} /> Edit
+                          </button>
+                          <button onClick={() => handleDelete(garage.id)}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                            <X size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -497,6 +517,7 @@ export default function Garages() {
       <AddGarageModal open={showAdd} onClose={() => setShowAdd(false)} />
       {viewGarage && <GarageDetailModal garage={viewGarage} onClose={() => setViewGarage(null)} />}
       {editGarage && <EditGarageModal garage={editGarage} onClose={() => setEditGarage(null)} />}
+      {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}
     </div>
   );
 }
