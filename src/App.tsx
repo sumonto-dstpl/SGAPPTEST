@@ -23,7 +23,7 @@ function LoadingScreen() {
         <Building2 size={28} className="text-white" />
       </div>
       <div className="text-center">
-        <h1 className="text-lg font-bold text-gray-800">Property &amp; Garage Management</h1>
+        <h1 className="text-lg font-bold text-gray-800">Mullick Fintech</h1>
         <p className="text-sm text-gray-500 mt-1">Loading your data...</p>
       </div>
       <Loader2 size={24} className="text-blue-600 animate-spin mt-2" />

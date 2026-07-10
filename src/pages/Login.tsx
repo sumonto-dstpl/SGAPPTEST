@@ -58,7 +58,7 @@ export default function Login() {
         {/* Heading */}
         <div className="mb-10">
           <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-3">
-            Property & Garage<br />Management System
+            Mullick Fintech
           </h1>
           <p className="text-gray-500 text-sm font-medium">
             Manage Markets, Shops & Garages Efficiently
@@ -227,7 +227,7 @@ export default function Login() {
           {/* Footer */}
           <div className="text-center mt-10 space-y-1">
             <p className="text-xs text-blue-500 font-medium">Version 1.0</p>
-            <p className="text-xs text-gray-400">© 2026 Property &amp; Garage Management System</p>
+            <p className="text-xs text-gray-400">© 2026 Mullick Fintech</p>
             <p className="text-xs text-gray-400">Powered by Your Company Name</p>
           </div>
         </div>

@@ -75,6 +75,7 @@ export default function Backup() {
   const [page, setPage] = useState(1);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [uploadedFileData, setUploadedFileData] = useState<ArrayBuffer | null>(null);
+  const [selectedBackupId, setSelectedBackupId] = useState<string>('');
 
   // Auto backup state - hidden for now
   /*
@@ -134,12 +135,13 @@ export default function Backup() {
     } catch { showSnackbar('Failed to run backup', 'error'); }
   };
 
-  const handleRestore = async () => {
-    if (!restoreFile) { showSnackbar('Please select a backup file', 'warning'); return; }
+  const handleRestoreFromHistory = async () => {
+    if (!selectedBackupId) { showSnackbar('Please select a backup first', 'warning'); return; }
+    const backup = backups.find(b => b.id === selectedBackupId);
     setRestoring(true);
     await new Promise(r => setTimeout(r, 1500));
     setRestoring(false);
-    showSnackbar('Restore completed successfully', 'success');
+    showSnackbar(`Restored from backup "${backup?.name}"`, 'success');
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -262,7 +264,7 @@ export default function Backup() {
             <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center">
               <UploadCloud size={18} className="text-green-600" />
             </div>
-            <h2 className="font-bold text-gray-900">Restore from Excel</h2>
+            <h2 className="font-bold text-gray-900">Restore</h2>
           </div>
 
           <div className="space-y-4">
@@ -270,13 +272,45 @@ export default function Backup() {
               <Shield size={15} className="flex-shrink-0 mt-0.5" />
               <span>Restoring will overwrite current data. Make sure you have a recent backup before proceeding.</span>
             </div>
+
+            {/* Restore from backup history */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Upload Excel File (.xlsx)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Restore from Backup History</label>
+              <select
+                value={selectedBackupId}
+                onChange={e => setSelectedBackupId(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+              >
+                <option value="">-- Select a backup --</option>
+                {backups.map(b => (
+                  <option key={b.id} value={b.id}>{b.name} ({b.createdAt})</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleRestoreFromHistory}
+              disabled={restoring || !selectedBackupId}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60"
+            >
+              <RefreshCw size={18} className={restoring ? 'animate-spin' : ''} />
+              {restoring ? 'Restoring...' : 'Restore from History'}
+            </button>
+
+            {/* OR divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-sm font-semibold text-gray-400">OR</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
+            {/* Restore from Excel */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Restore from Excel File (.xlsx)</label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
                 onChange={handleFileUpload}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200"
               />
               {uploadedFileName && (
                 <p className="text-xs text-gray-500 mt-2">Selected: {uploadedFileName}</p>
@@ -290,11 +324,6 @@ export default function Backup() {
               {restoring ? 'Restoring...' : 'Restore from Excel'}
             </button>
           </div>
-
-          {/* Auto backup section hidden for now */}
-          {/* <div className="mt-6 pt-5 border-t border-gray-100">
-            ...auto backup code...
-          </div> */}
         </div>
       </div>
 

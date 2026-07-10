@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, User, Bell, Shield, Database, Globe } from 'lucide-react';
+
+const SETTINGS_KEY = 'mullick_fintech_settings';
 
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -36,13 +38,29 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
+const defaults = {
+  profile: { name: 'Admin', email: 'admin@mullickfintech.com', phone: '9876543210', org: 'Mullick Fintech' },
+  notifications: { email: true, sms: false, dueReminder: true, backupAlert: true },
+  system: { currency: 'INR (₹)', language: 'English', timezone: 'Asia/Kolkata (IST)', dateFormat: 'DD-MM-YYYY' },
+};
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) return { ...defaults, ...JSON.parse(raw) };
+  } catch { }
+  return defaults;
+}
+
 export default function Settings() {
-  const [profile, setProfile] = useState({ name: 'Admin', email: 'admin@pgmsystem.com', phone: '9876543210', org: 'Property & Garage Mgmt.' });
-  const [notifications, setNotifications] = useState({ email: true, sms: false, dueReminder: true, backupAlert: true });
-  const [system, setSystem] = useState({ currency: 'INR (₹)', language: 'English', timezone: 'Asia/Kolkata (IST)', dateFormat: 'DD-MM-YYYY' });
+  const initial = loadSettings();
+  const [profile, setProfile] = useState(initial.profile);
+  const [notifications, setNotifications] = useState(initial.notifications);
+  const [system, setSystem] = useState(initial.system);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ profile, notifications, system }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

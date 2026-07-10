@@ -65,7 +65,7 @@ export default function Layout({ children, currentPage, onNavigate }: Props) {
           </div>
           {sidebarOpen && (
             <span className="text-sm font-bold text-gray-800 leading-tight">
-              Property &<br />Garage Mgmt.
+              Mullick Fintech
             </span>
           )}
         </div>
@@ -118,7 +118,7 @@ export default function Layout({ children, currentPage, onNavigate }: Props) {
               <Menu size={18} />
             </button>
             <span className="text-sm font-semibold text-gray-700 hidden sm:block">
-              Property &amp; Garage Management System
+              Mullick Fintech
             </span>
           </div>
           <div className="flex items-center gap-3">
