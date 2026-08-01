@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Shop } from '../types';
 import { CheckCircle } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from './Modal';
+import CollectPaymentModal from './CollectPaymentModal';
 
 interface Props { shop: Shop; onClose: () => void }
 
@@ -16,15 +18,29 @@ function Row({ label, value, red }: { label: string; value: string | number; red
 }
 
 export default function ShopDetailModal({ shop, onClose }: Props) {
-  const { updateShop } = useData();
+  const { updateShop, addPayment } = useData();
   const { showSnackbar } = useSnackbar();
+  const [showCollect, setShowCollect] = useState(false);
 
-  const handlePay = async () => {
-    try {
-      await updateShop(shop.id, { paidRent: shop.monthlyRent, currentDue: 0, paymentStatus: 'Paid' });
-      showSnackbar(`Payment marked as Paid for ${shop.shopName}`, 'success');
-      onClose();
-    } catch { showSnackbar('Failed to update payment status', 'error'); }
+  const handleCollect = async (amount: number, remark: string) => {
+    const newPaid = shop.paidRent + amount;
+    const newDue = Math.max(0, shop.currentDue - amount);
+    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
+    await addPayment({
+      date: new Date().toISOString().split('T')[0],
+      name: `${shop.tenantName} (${shop.shopName})`,
+      type: 'Shop',
+      amount,
+      reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+      remark: remark || undefined,
+    });
+    showSnackbar(
+      `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
+      'success',
+    );
+    setShowCollect(false);
+    onClose();
   };
 
   const fmtDate = (s: string) => {
@@ -57,18 +73,28 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="End Date"      value={fmtDate(shop.endDate)} />
       </div>
 
-      {shop.paymentStatus === 'Due' && (
+      {shop.paymentStatus === 'Due' && shop.currentDue > 0 && (
         <button
-          onClick={handlePay}
+          onClick={() => setShowCollect(true)}
           className="mt-5 w-full flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
         >
           <CheckCircle size={18} />
-          Mark as Paid — ₹{shop.monthlyRent.toLocaleString('en-IN')}
+          Collect Payment — ₹{shop.currentDue.toLocaleString('en-IN')}
         </button>
       )}
       <button onClick={onClose} className="mt-2 w-full py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
         Close
       </button>
+
+      {showCollect && (
+        <CollectPaymentModal
+          open={true}
+          onClose={() => setShowCollect(false)}
+          title={`Collect Payment — ${shop.shopName}`}
+          currentDue={shop.currentDue}
+          onConfirm={handleCollect}
+        />
+      )}
     </Modal>
   );
 }

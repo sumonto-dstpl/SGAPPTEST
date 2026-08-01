@@ -3,6 +3,7 @@ import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, Chevron
 import { useData } from '../store/DataContext';
 import { Garage } from '../types';
 import Modal from '../components/Modal';
+import CollectPaymentModal from '../components/CollectPaymentModal';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
 const ITEMS_PER_PAGE = 10;
@@ -339,22 +340,25 @@ export default function Garages() {
   const [viewGarage, setViewGarage] = useState<Garage | null>(null);
   const [editGarage, setEditGarage] = useState<Garage | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [collecting, setCollecting] = useState<string | null>(null);
+  const [collectGarage, setCollectGarage] = useState<Garage | null>(null);
 
-  const handleCollect = async (garage: Garage) => {
-    setCollecting(garage.id);
-    try {
-      await updateGarage(garage.id, { currentDue: 0, paymentStatus: 'Paid' });
-      await addPayment({
-        date: new Date().toISOString().split('T')[0],
-        name: `${garage.ownerName} (${garage.garageNo})`,
-        type: 'Garage',
-        amount: garage.currentDue,
-        reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      });
-      showSnackbar(`₹${garage.currentDue.toLocaleString('en-IN')} collected from ${garage.garageNo}`, 'success');
-    } catch { showSnackbar('Failed to collect payment', 'error'); }
-    finally { setCollecting(null); }
+  const handleCollect = async (garage: Garage, amount: number, remark: string) => {
+    const newDue = Math.max(0, garage.currentDue - amount);
+    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+    await updateGarage(garage.id, { currentDue: newDue, paymentStatus: newStatus });
+    await addPayment({
+      date: new Date().toISOString().split('T')[0],
+      name: `${garage.ownerName} (${garage.garageNo})`,
+      type: 'Garage',
+      amount,
+      reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+      remark: remark || undefined,
+    });
+    showSnackbar(
+      `₹${amount.toLocaleString('en-IN')} collected from ${garage.garageNo}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
+      'success',
+    );
+    setCollectGarage(null);
   };
 
   const totalRent = garages.reduce((s, g) => s + g.monthlyRent, 0);
@@ -473,12 +477,11 @@ export default function Garages() {
                   <div className="flex items-center justify-end gap-1">
                     {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
                       <button
-                        onClick={() => handleCollect(garage)}
-                        disabled={collecting === garage.id}
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap"
+                        onClick={() => setCollectGarage(garage)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
                       >
                         <Banknote size={13} />
-                        {collecting === garage.id ? '...' : 'Collect'}
+                        Collect
                       </button>
                     )}
                     <div className="relative">
@@ -535,6 +538,15 @@ export default function Garages() {
       <AddGarageModal open={showAdd} onClose={() => setShowAdd(false)} />
       {viewGarage && <GarageDetailModal garage={viewGarage} onClose={() => setViewGarage(null)} />}
       {editGarage && <EditGarageModal garage={editGarage} onClose={() => setEditGarage(null)} />}
+      {collectGarage && (
+        <CollectPaymentModal
+          open={true}
+          onClose={() => setCollectGarage(null)}
+          title={`Collect Payment — ${collectGarage.garageNo}`}
+          currentDue={collectGarage.currentDue}
+          onConfirm={(amt, rem) => handleCollect(collectGarage, amt, rem)}
+        />
+      )}
       {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}
     </div>
   );

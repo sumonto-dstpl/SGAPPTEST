@@ -75,6 +75,55 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return adapterRef.current;
   };
 
+  // ── Auto-due: advance due date & set status to Due when due date has passed ─
+  const applyAutoDue = useCallback(async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const addInterval = (d: Date, leaseType: Garage['leaseType']): Date => {
+      if (leaseType === 'Yearly') return new Date(d.getFullYear() + 1, d.getMonth(), d.getDate());
+      return new Date(d.getFullYear(), d.getMonth() + 1, d.getDate()); // Monthly default
+    };
+    const formatD = (d: Date) => d.toISOString().split('T')[0];
+
+    const a = await adapter();
+
+    for (const shop of shops) {
+      if (!shop.dueDate) continue;
+      const due = new Date(shop.dueDate);
+      due.setHours(0, 0, 0, 0);
+      if (today <= due) continue;
+      const nextDue = addInterval(due, 'Monthly');
+      const updated = await a.updateShop(shop.id, {
+        paymentStatus: 'Due',
+        currentDue: shop.monthlyRent,
+        paidRent: 0,
+        dueDate: formatD(nextDue),
+      });
+      setShops(prev => prev.map(x => x.id === shop.id ? updated : x));
+    }
+
+    for (const garage of garages) {
+      if (!garage.dueDate) continue;
+      const due = new Date(garage.dueDate);
+      due.setHours(0, 0, 0, 0);
+      if (today <= due) continue;
+      const nextDue = addInterval(due, garage.leaseType === 'Long-term' ? 'Yearly' : garage.leaseType);
+      const updated = await a.updateGarage(garage.id, {
+        paymentStatus: 'Due',
+        currentDue: garage.monthlyRent,
+        dueDate: formatD(nextDue),
+      });
+      setGarages(prev => prev.map(x => x.id === garage.id ? updated : x));
+    }
+  }, [shops, garages]);
+
+  const autoDueRan = useRef(false);
+  useEffect(() => {
+    if (loading || autoDueRan.current) return;
+    autoDueRan.current = true;
+    applyAutoDue();
+  }, [loading, applyAutoDue]);
+
   // ── Markets ────────────────────────────────────────────────────────────────
   const addMarket = async (data: Omit<Market, 'id' | 'createdAt'>) => {
     const m = await (await adapter()).addMarket(data);
