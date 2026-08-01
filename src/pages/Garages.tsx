@@ -25,12 +25,12 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
       let dueDate: Date;
 
       if (form.leaseType === 'Monthly') {
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
       } else {
         // Yearly
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
       }
 
       const formatDate = (d: Date) => d.toISOString().split('T')[0];
