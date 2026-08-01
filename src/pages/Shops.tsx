@@ -5,7 +5,7 @@ import { useSnackbar } from '../contexts/SnackbarContext';
 import { Shop } from '../types';
 import ShopDetailModal from '../components/ShopDetailModal';
 
-const PER_PAGE = 8;
+const PER_PAGE = 10;
 
 function fmt(n: number) { return `₹${n.toLocaleString('en-IN')}`; }
 
