@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
-const PER_PAGE = 5;
+const PER_PAGE = 10;
 
 // Auto-backup settings storage key
 const AUTO_BACKUP_KEY = 'pgms_auto_backup_settings';
