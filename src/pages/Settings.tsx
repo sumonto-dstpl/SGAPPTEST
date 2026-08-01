@@ -101,7 +101,7 @@ export default function Settings() {
         </Section>
 
         {/* Notifications - Disabled for now */}
-        <Section title="Notification Settings" icon={<Bell size={17} />}>
+        {/* <Section title="Notification Settings" icon={<Bell size={17} />}>
   <div
     className="space-y-0 pointer-events-none opacity-20 select-none"
     aria-disabled="true"
@@ -126,7 +126,7 @@ export default function Settings() {
     ))}
   </div>
 </Section>
-
+ */}
         {/* System */}
         <Section title="System Settings" icon={<Globe size={17} />}>
           <div className="space-y-0">
