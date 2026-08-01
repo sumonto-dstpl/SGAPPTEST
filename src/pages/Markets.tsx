@@ -8,13 +8,17 @@ import { useSnackbar } from '../contexts/SnackbarContext';
 const ITEMS_PER_PAGE = 10;
 
 function AddMarketModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { addMarket } = useData();
+  const { addMarket, markets } = useData();
   const { showSnackbar } = useSnackbar();
   const [form, setForm] = useState({ name: '', phoneNumber: '', monthlyRent: '', address: '' });
 
   const [saving, setSaving] = useState(false);
   const submit = async () => {
     if (!form.name || !form.phoneNumber || !form.monthlyRent) return;
+    if (markets.some(m => m.name.toLowerCase() === form.name.trim().toLowerCase())) {
+      showSnackbar(`Market name "${form.name.trim()}" already exists`, 'warning');
+      return;
+    }
     setSaving(true);
     try {
       await addMarket({ name: form.name, phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent), address: form.address });

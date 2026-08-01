@@ -4,6 +4,7 @@ import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { Shop } from '../types';
 import ShopDetailModal from '../components/ShopDetailModal';
+import CollectPaymentModal from '../components/CollectPaymentModal';
 
 const PER_PAGE = 10;
 
@@ -24,22 +25,26 @@ export default function Shops() {
   const [statusF, setStatusF]     = useState('');
   const [page, setPage]           = useState(1);
   const [selected, setSelected]   = useState<Shop | null>(null);
-  const [collecting, setCollecting] = useState<string | null>(null);
+  const [collectShop, setCollectShop] = useState<Shop | null>(null);
 
-  const handleCollect = async (shop: Shop) => {
-    setCollecting(shop.id);
-    try {
-      await updateShop(shop.id, { paidRent: shop.monthlyRent, currentDue: 0, paymentStatus: 'Paid' });
-      await addPayment({
-        date: new Date().toISOString().split('T')[0],
-        name: `${shop.tenantName} (${shop.shopName})`,
-        type: 'Shop',
-        amount: shop.currentDue,
-        reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      });
-      showSnackbar(`₹${shop.currentDue.toLocaleString('en-IN')} collected from ${shop.shopName}`, 'success');
-    } catch { showSnackbar('Failed to collect payment', 'error'); }
-    finally { setCollecting(null); }
+  const handleCollect = async (shop: Shop, amount: number, remark: string) => {
+    const newPaid = shop.paidRent + amount;
+    const newDue = shop.currentDue - amount;
+    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: Math.max(0, newDue), paymentStatus: newStatus });
+    await addPayment({
+      date: new Date().toISOString().split('T')[0],
+      name: `${shop.tenantName} (${shop.shopName})`,
+      type: 'Shop',
+      amount,
+      reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+      remark: remark || undefined,
+    });
+    showSnackbar(
+      `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
+      'success',
+    );
+    setCollectShop(null);
   };
 
   const filtered = shops.filter(s => {
@@ -157,12 +162,11 @@ export default function Shops() {
                     <div className="flex items-center gap-1">
                       {s.paymentStatus === 'Due' && s.currentDue > 0 && (
                         <button
-                          onClick={() => handleCollect(s)}
-                          disabled={collecting === s.id}
-                          className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60"
+                          onClick={() => setCollectShop(s)}
+                          className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                         >
                           <Banknote size={13} />
-                          {collecting === s.id ? '...' : 'Collect'}
+                          Collect
                         </button>
                       )}
                       <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors">
@@ -193,6 +197,15 @@ export default function Shops() {
       </div>
 
       {selected && <ShopDetailModal shop={selected} onClose={() => setSelected(null)} />}
+      {collectShop && (
+        <CollectPaymentModal
+          open={true}
+          onClose={() => setCollectShop(null)}
+          title={`Collect Payment — ${collectShop.shopName}`}
+          currentDue={collectShop.currentDue}
+          onConfirm={(amt, rem) => handleCollect(collectShop, amt, rem)}
+        />
+      )}
     </div>
   );
 }

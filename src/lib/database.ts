@@ -31,6 +31,8 @@ export interface DatabaseAdapter {
 
   addBackup(data: Omit<BackupRecord, 'id'>): Promise<BackupRecord>;
   deleteBackup(id: string): Promise<void>;
+
+  restoreAll(data: AllData): Promise<void>;
 }
 
 // ─── Environment Detection ───────────────────────────────────────────────────

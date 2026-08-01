@@ -47,6 +47,7 @@ export interface Payment {
   type: 'Shop' | 'Garage';
   amount: number;
   reference: string;
+  remark?: string;
 }
 
 export interface BackupRecord {

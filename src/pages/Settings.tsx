@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, User, Bell, Shield, Database, Globe } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useSnackbar } from '../contexts/SnackbarContext';
 
 const SETTINGS_KEY = 'mullick_fintech_settings';
 
@@ -59,10 +61,35 @@ export default function Settings() {
   const [system, setSystem] = useState(initial.system);
   const [saved, setSaved] = useState(false);
 
+  const { changePassword } = useAuth();
+  const { showSnackbar } = useSnackbar();
+  const [pwd, setPwd] = useState({ current: '', next: '', confirm: '' });
+  const [pwdSaved, setPwdSaved] = useState(false);
+
   const handleSave = () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ profile, notifications, system }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleUpdatePassword = () => {
+    if (!pwd.current || !pwd.next || !pwd.confirm) {
+      showSnackbar('Please fill all password fields', 'warning');
+      return;
+    }
+    if (pwd.next !== pwd.confirm) {
+      showSnackbar('New password and confirm password do not match', 'warning');
+      return;
+    }
+    const result = changePassword(pwd.current, pwd.next);
+    if (!result.ok) {
+      showSnackbar(result.message ?? 'Failed to update password', 'error');
+      return;
+    }
+    showSnackbar('Password updated successfully', 'success');
+    setPwd({ current: '', next: '', confirm: '' });
+    setPwdSaved(true);
+    setTimeout(() => setPwdSaved(false), 2000);
   };
 
   return (
@@ -165,17 +192,18 @@ export default function Settings() {
         <Section title="Security" icon={<Shield size={17} />}>
           <div className="space-y-0">
             <Field label="Current Password">
-              <input className={inputCls} type="password" placeholder="••••••••" />
+              <input className={inputCls} type="password" placeholder="••••••••" value={pwd.current} onChange={e => setPwd(p => ({ ...p, current: e.target.value }))} />
             </Field>
             <Field label="New Password">
-              <input className={inputCls} type="password" placeholder="••••••••" />
+              <input className={inputCls} type="password" placeholder="••••••••" value={pwd.next} onChange={e => setPwd(p => ({ ...p, next: e.target.value }))} />
             </Field>
             <Field label="Confirm Password">
-              <input className={inputCls} type="password" placeholder="••••••••" />
+              <input className={inputCls} type="password" placeholder="••••••••" value={pwd.confirm} onChange={e => setPwd(p => ({ ...p, confirm: e.target.value }))} />
             </Field>
             <div className="pt-3">
-              <button className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors">
-                Update Password
+              <button onClick={handleUpdatePassword} disabled={pwdSaved}
+                className={`px-5 py-2.5 text-sm font-medium rounded-xl transition-colors text-white ${pwdSaved ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                {pwdSaved ? 'Password Updated!' : 'Update Password'}
               </button>
             </div>
           </div>

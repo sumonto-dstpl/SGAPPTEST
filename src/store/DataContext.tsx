@@ -29,6 +29,7 @@ interface DataContextType {
   addPayment: (data: Omit<Payment, 'id'>) => Promise<void>;
   addBackup: (data: Omit<BackupRecord, 'id'>) => Promise<void>;
   deleteBackup: (id: string) => Promise<void>;
+  restoreAll: (data: { markets: Market[]; shops: Shop[]; garages: Garage[]; payments: Payment[] }) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -131,6 +132,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setBackups(prev => prev.filter(x => x.id !== id));
   };
 
+  const restoreAll = async (data: { markets: Market[]; shops: Shop[]; garages: Garage[]; payments: Payment[] }) => {
+    await (await adapter()).restoreAll(data);
+    setMarkets(data.markets);
+    setShops(data.shops);
+    setGarages(data.garages);
+    setPayments(data.payments);
+  };
+
   return (
     <DataContext.Provider value={{
       markets, shops, garages, payments, backups,
@@ -138,7 +147,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       addMarket, updateMarket, deleteMarket,
       addShop, updateShop, deleteShop,
       addGarage, updateGarage, deleteGarage,
-      addPayment, addBackup, deleteBackup,
+      addPayment, addBackup, deleteBackup, restoreAll,
     }}>
       {children}
     </DataContext.Provider>

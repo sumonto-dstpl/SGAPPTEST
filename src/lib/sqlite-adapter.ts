@@ -277,4 +277,36 @@ export const sqliteAdapter: DatabaseAdapter = {
     const conn = await db();
     await conn.execute('DELETE FROM backups WHERE id=$1', [id]);
   },
+
+  async restoreAll(data): Promise<void> {
+    const conn = await db();
+    await conn.execute('DELETE FROM markets',  []);
+    await conn.execute('DELETE FROM shops',    []);
+    await conn.execute('DELETE FROM garages',  []);
+    await conn.execute('DELETE FROM payments', []);
+    for (const m of data.markets) {
+      await conn.execute(
+        `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [m.id, m.name, m.phoneNumber, m.monthlyRent, m.address ?? null, m.createdAt],
+      );
+    }
+    for (const s of data.shops) {
+      await conn.execute(
+        `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate],
+      );
+    }
+    for (const g of data.garages) {
+      await conn.execute(
+        `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate],
+      );
+    }
+    for (const p of data.payments) {
+      await conn.execute(
+        `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [p.id, p.date, p.name, p.type, p.amount, p.reference],
+      );
+    }
+  },
 };

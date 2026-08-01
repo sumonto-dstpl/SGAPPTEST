@@ -21,7 +21,7 @@ function fmtDate(s: string) {
 // ─── Add Shop Modal ───────────────────────────────────────────────────────────
 
 function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () => void; market: Market }) {
-  const { addShop } = useData();
+  const { addShop, shops } = useData();
   const { showSnackbar } = useSnackbar();
   const [shopType, setShopType] = useState<'Rented' | 'Leased'>('Rented');
   const [saving, setSaving] = useState(false);
@@ -62,6 +62,10 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   const submit = async () => {
     if (!form.shopName || !form.tenantName || !form.phoneNumber || !form.monthlyRent) {
       showSnackbar('Please fill all required fields', 'warning');
+      return;
+    }
+    if (shops.some(s => s.shopName.toLowerCase() === form.shopName.trim().toLowerCase())) {
+      showSnackbar(`Shop name "${form.shopName.trim()}" already exists`, 'warning');
       return;
     }
     setSaving(true);

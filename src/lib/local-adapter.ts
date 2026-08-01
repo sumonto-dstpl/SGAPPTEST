@@ -178,6 +178,13 @@ export const localAdapter: DatabaseAdapter = {
   async deleteBackup(id): Promise<void> {
     save(K.backups, load<BackupRecord>(K.backups, SEED_BACKUPS).filter(b => b.id !== id));
   },
+
+  async restoreAll(data): Promise<void> {
+    save(K.markets,  data.markets);
+    save(K.shops,    data.shops);
+    save(K.garages,  data.garages);
+    save(K.payments, data.payments);
+  },
 };
 
 // ─── Public helper: get raw data for Excel export ─────────────────────────────

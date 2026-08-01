@@ -16,6 +16,7 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   });
 
   const nextNo = `G-${String(garages.length + 1).padStart(2, '0')}`;
+  const [garageNo, setGarageNo] = useState(nextNo);
 
   // Autofill end date based on lease type and start date
   useEffect(() => {
@@ -41,10 +42,8 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   // Reset dates when lease type changes
   useEffect(() => {
     if (form.leaseType === 'Long-term') {
-      // Clear end date for long-term (manual entry)
       setForm(p => ({ ...p, leaseEndDate: '', dueDate: '' }));
     } else if (form.startDate) {
-      // Recalculate for Monthly/Yearly
       const startDate = new Date(form.startDate);
       let endDate: Date;
       let dueDate: Date;
@@ -62,16 +61,23 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
     }
   }, [form.leaseType]);
 
+  // Keep garageNo in sync with default when modal reopens
+  useEffect(() => { if (open) setGarageNo(nextNo); }, [open]);
+
   const [saving, setSaving] = useState(false);
   const submit = async () => {
-    if (!form.ownerName || !form.mobileNumber || !form.vehicleNumber || !form.monthlyRent || !form.startDate || (form.leaseType === 'Long-term' && !form.leaseEndDate)) {
+    if (!garageNo.trim() || !form.ownerName || !form.mobileNumber || !form.vehicleNumber || !form.monthlyRent || !form.startDate || (form.leaseType === 'Long-term' && !form.leaseEndDate)) {
       showSnackbar('Please fill all required fields', 'warning');
+      return;
+    }
+    if (garages.some(g => g.garageNo.toLowerCase() === garageNo.trim().toLowerCase())) {
+      showSnackbar(`Garage No "${garageNo.trim()}" already exists`, 'warning');
       return;
     }
     setSaving(true);
     try {
       await addGarage({
-        garageNo: nextNo,
+        garageNo: garageNo.trim(),
         ownerName: form.ownerName, mobileNumber: form.mobileNumber, vehicleNumber: form.vehicleNumber,
         vehicleType: form.vehicleType as Garage['vehicleType'],
         monthlyRent: Number(form.monthlyRent), paymentStatus: 'Due',
@@ -79,7 +85,7 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
         leaseEndDate: form.leaseEndDate, leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate, dueDate: form.dueDate,
       });
-      showSnackbar(`${nextNo} added successfully`, 'success');
+      showSnackbar(`${garageNo.trim()} added successfully`, 'success');
       setForm({ ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car', monthlyRent: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '' });
       onClose();
     } catch { showSnackbar('Failed to add garage', 'error'); }
@@ -89,8 +95,16 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   return (
     <Modal open={open} onClose={onClose} title="Add New Garage">
       <div className="space-y-4">
-        <div className="bg-blue-50 rounded-xl px-4 py-2.5 text-sm text-blue-700 font-medium">
-          Garage No: <span className="font-bold">{nextNo}</span> (auto-assigned)
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Garage No *</label>
+          <input
+            type="text"
+            value={garageNo}
+            onChange={e => setGarageNo(e.target.value)}
+            placeholder={nextNo}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          />
+          <p className="text-xs text-gray-400 mt-1">Auto-suggested: {nextNo} — you can change it</p>
         </div>
         {[
           { label: 'Owner Name', key: 'ownerName', placeholder: 'Mr. Roy' },
@@ -206,7 +220,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
 }
 
 function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => void }) {
-  const { updateGarage } = useData();
+  const { updateGarage, garages } = useData();
   const { showSnackbar } = useSnackbar();
   const [form, setForm] = useState({
     garageNo: garage.garageNo,
@@ -228,6 +242,10 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
   const handleSave = async () => {
     if (!form.garageNo.trim() || !form.ownerName.trim()) {
       showSnackbar('Garage No. and Owner Name are required', 'warning');
+      return;
+    }
+    if (garages.some(g => g.id !== garage.id && g.garageNo.toLowerCase() === form.garageNo.trim().toLowerCase())) {
+      showSnackbar(`Garage No "${form.garageNo.trim()}" already exists`, 'warning');
       return;
     }
     setSaving(true);
