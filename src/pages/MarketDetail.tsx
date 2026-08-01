@@ -9,7 +9,7 @@ import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from '../components/Modal';
 import ShopDetailModal from '../components/ShopDetailModal';
 
-const PER_PAGE = 5;
+const PER_PAGE = 10;
 
 function fmt(n: number) { return n.toLocaleString('en-IN'); }
 function fmtDate(s: string) {
@@ -41,12 +41,12 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
 
       if (shopType === 'Rented') {
         // Monthly: end date = one day before same date next month, due date = same date next month
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
       } else {
         // Yearly: end date = one day before same date next year, due date = same date next year
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
+        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
       }
 
       const formatDate = (d: Date) => d.toISOString().split('T')[0];
