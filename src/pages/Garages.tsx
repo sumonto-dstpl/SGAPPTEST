@@ -5,7 +5,7 @@ import { Garage } from '../types';
 import Modal from '../components/Modal';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 10;
 
 function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { garages, addGarage } = useData();
