@@ -21,6 +21,7 @@ export interface Shop {
   shopType: 'Rented' | 'Leased';
   startDate: string;
   endDate: string;
+  remark?: string;
 }
 
 export interface Garage {
@@ -31,6 +32,7 @@ export interface Garage {
   vehicleNumber: string;
   vehicleType: 'Car' | 'Bike' | 'Truck' | 'Other';
   monthlyRent: number;
+  paidRent: number;
   paymentStatus: 'Paid' | 'Due';
   currentDue: number;
   leaseEndDate: string;
@@ -38,6 +40,7 @@ export interface Garage {
   leaseType: 'Monthly' | 'Yearly' | 'Long-term';
   address?: string;
   startDate: string;
+  remark?: string;
 }
 
 export interface Payment {
@@ -58,6 +61,12 @@ export interface BackupRecord {
   createdAt: string;
   size: string;
   createdBy: string;
+  snapshot?: {
+    markets: Market[];
+    shops: Shop[];
+    garages: Garage[];
+    payments: Payment[];
+  };
 }
 
 export type Page =

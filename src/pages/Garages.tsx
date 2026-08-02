@@ -81,7 +81,7 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
         garageNo: garageNo.trim(),
         ownerName: form.ownerName, mobileNumber: form.mobileNumber, vehicleNumber: form.vehicleNumber,
         vehicleType: form.vehicleType as Garage['vehicleType'],
-        monthlyRent: Number(form.monthlyRent), paymentStatus: 'Due',
+        monthlyRent: Number(form.monthlyRent), paidRent: 0, paymentStatus: 'Due',
         currentDue: Number(form.monthlyRent),
         leaseEndDate: form.leaseEndDate, leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate, dueDate: form.dueDate,
@@ -192,10 +192,12 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             { label: 'Vehicle Number', value: garage.vehicleNumber },
             { label: 'Vehicle Type', value: garage.vehicleType },
             { label: 'Monthly Rent', value: `₹ ${garage.monthlyRent.toLocaleString('en-IN')}` },
+            { label: 'Paid Rent', value: `₹ ${(garage.paidRent ?? 0).toLocaleString('en-IN')}` },
             { label: 'Current Due', value: `₹ ${garage.currentDue.toLocaleString('en-IN')}` },
             { label: 'Lease Type', value: garage.leaseType },
             { label: 'Start Date', value: garage.startDate },
             { label: 'Lease End Date', value: garage.leaseEndDate },
+            { label: 'Remark', value: garage.remark || '—' },
           ].map(f => (
             <div key={f.label}>
               <p className="text-xs text-gray-500 mb-1">{f.label}</p>
@@ -220,7 +222,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
   );
 }
 
-function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => void }) {
+function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage; onClose: () => void; onRequestCollect: (garage: Garage) => void }) {
   const { updateGarage, garages } = useData();
   const { showSnackbar } = useSnackbar();
   const [form, setForm] = useState({
@@ -230,11 +232,13 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
     vehicleNumber: garage.vehicleNumber,
     vehicleType: garage.vehicleType,
     monthlyRent: String(garage.monthlyRent),
+    paidRent: String(garage.paidRent ?? 0),
     leaseType: garage.leaseType,
     startDate: garage.startDate,
     leaseEndDate: garage.leaseEndDate,
     paymentStatus: garage.paymentStatus,
     currentDue: String(garage.currentDue),
+    remark: garage.remark ?? '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -251,6 +255,7 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
     }
     setSaving(true);
     try {
+      const statusChangedToPaid = garage.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       await updateGarage(garage.id, {
         garageNo: form.garageNo.trim(),
         ownerName: form.ownerName.trim(),
@@ -258,14 +263,22 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
         vehicleNumber: form.vehicleNumber.trim(),
         vehicleType: form.vehicleType as Garage['vehicleType'],
         monthlyRent: Number(form.monthlyRent) || 0,
+        paidRent: Number(form.paidRent) || 0,
         leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate,
         leaseEndDate: form.leaseEndDate,
-        paymentStatus: form.paymentStatus as Garage['paymentStatus'],
-        currentDue: Number(form.currentDue) || 0,
+        paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
+        currentDue: statusChangedToPaid ? garage.currentDue : (Number(form.currentDue) || 0),
+        remark: form.remark.trim() || undefined,
       });
-      showSnackbar(`Garage "${form.garageNo}" updated successfully`, 'success');
-      onClose();
+      if (statusChangedToPaid) {
+        showSnackbar('Garage details saved. Please collect the payment.', 'info');
+        onClose();
+        onRequestCollect({ ...garage, garageNo: form.garageNo.trim(), ownerName: form.ownerName.trim(), monthlyRent: Number(form.monthlyRent) || 0 });
+      } else {
+        showSnackbar(`Garage "${form.garageNo}" updated successfully`, 'success');
+        onClose();
+      }
     } catch { showSnackbar('Failed to update garage', 'error'); }
     setSaving(false);
   };
@@ -298,6 +311,7 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
             </select>
           </div>
           <F label="Monthly Rent (₹)" name="monthlyRent" type="number" />
+          <F label="Paid Rent (₹)" name="paidRent" type="number" />
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
             <select value={form.leaseType} onChange={e => set('leaseType', e.target.value)}
@@ -315,6 +329,16 @@ function EditGarageModal({ garage, onClose }: { garage: Garage; onClose: () => v
             </select>
           </div>
           <F label="Current Due (₹)" name="currentDue" type="number" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Remark</label>
+          <textarea
+            value={form.remark}
+            onChange={e => set('remark', e.target.value)}
+            placeholder="Optional remark..."
+            rows={2}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+          />
         </div>
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
@@ -343,9 +367,10 @@ export default function Garages() {
   const [collectGarage, setCollectGarage] = useState<Garage | null>(null);
 
   const handleCollect = async (garage: Garage, amount: number, remark: string) => {
+    const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { currentDue: newDue, paymentStatus: newStatus });
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
@@ -453,7 +478,7 @@ export default function Garages() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
-              {['Garage No.', 'Owner Name', 'Mobile Number', 'Vehicle Number', 'Monthly Rent (₹)', 'End Date', 'Payment Status', 'Action'].map(h => (
+              {['Garage No.', 'Owner Name', 'Mobile Number', 'Vehicle Number', 'Monthly Rent (₹)', 'Paid Rent (₹)', 'Current Due (₹)', 'End Date', 'Payment Status', 'Remark', 'Action'].map(h => (
                 <th key={h} className={`px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide ${h === 'Action' ? 'text-right' : 'text-left'}`}>{h}</th>
               ))}
             </tr>
@@ -466,6 +491,8 @@ export default function Garages() {
                 <td className="px-4 py-4 text-gray-600">{garage.mobileNumber}</td>
                 <td className="px-4 py-4 text-gray-600">{garage.vehicleNumber}</td>
                 <td className="px-4 py-4 text-gray-700">₹ {garage.monthlyRent.toLocaleString('en-IN')}</td>
+                <td className="px-4 py-4 text-gray-700">₹ {(garage.paidRent ?? 0).toLocaleString('en-IN')}</td>
+                <td className="px-4 py-4 text-gray-700">₹ {garage.currentDue.toLocaleString('en-IN')}</td>
                 <td className="px-4 py-4 text-gray-600">{garage.leaseEndDate || '—'}</td>
                 <td className="px-4 py-4">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${garage.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -473,6 +500,7 @@ export default function Garages() {
                     {garage.paymentStatus}
                   </span>
                 </td>
+                <td className="px-4 py-4 text-gray-600 max-w-[200px] truncate" title={garage.remark || ''}>{garage.remark || '—'}</td>
                 <td className="px-4 py-4">
                   <div className="flex items-center justify-end gap-1">
                     {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
@@ -511,7 +539,7 @@ export default function Garages() {
               </tr>
             ))}
             {paginated.length === 0 && (
-              <tr><td colSpan={8} className="px-5 py-10 text-center text-gray-400 text-sm">No garages found</td></tr>
+              <tr><td colSpan={10} className="px-5 py-10 text-center text-gray-400 text-sm">No garages found</td></tr>
             )}
           </tbody>
         </table>
@@ -537,7 +565,7 @@ export default function Garages() {
 
       <AddGarageModal open={showAdd} onClose={() => setShowAdd(false)} />
       {viewGarage && <GarageDetailModal garage={viewGarage} onClose={() => setViewGarage(null)} />}
-      {editGarage && <EditGarageModal garage={editGarage} onClose={() => setEditGarage(null)} />}
+      {editGarage && <EditGarageModal garage={editGarage} onClose={() => setEditGarage(null)} onRequestCollect={(g) => setCollectGarage(g)} />}
       {collectGarage && (
         <CollectPaymentModal
           open={true}

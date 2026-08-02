@@ -71,6 +71,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="Due Date"      value={fmtDate(shop.dueDate)} />
         <Row label="Start Date"    value={fmtDate(shop.startDate)} />
         <Row label="End Date"      value={fmtDate(shop.endDate)} />
+        <Row label="Remark"       value={shop.remark || '—'} />
       </div>
 
       {shop.paymentStatus === 'Due' && shop.currentDue > 0 && (

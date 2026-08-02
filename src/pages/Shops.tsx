@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Eye, IndianRupee, ShoppingBag, CheckCircle, XCircle, Banknote } from 'lucide-react';
+import { Search, Eye, IndianRupee, ShoppingBag, CheckCircle, XCircle, Banknote, Pencil } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { Shop } from '../types';
 import ShopDetailModal from '../components/ShopDetailModal';
 import CollectPaymentModal from '../components/CollectPaymentModal';
+import Modal from '../components/Modal';
 
 const PER_PAGE = 10;
 
@@ -14,6 +15,111 @@ function fmtDate(s: string) {
   if (!s) return '—';
   try { return new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
   catch { return s; }
+}
+
+function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClose: () => void; onRequestCollect: (shop: Shop) => void }) {
+  const { updateShop } = useData();
+  const { showSnackbar } = useSnackbar();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    shopName: shop.shopName,
+    tenantName: shop.tenantName,
+    phoneNumber: shop.phoneNumber,
+    monthlyRent: String(shop.monthlyRent),
+    paidRent: String(shop.paidRent),
+    paymentStatus: shop.paymentStatus,
+    currentDue: String(shop.currentDue),
+    remark: shop.remark ?? '',
+  });
+  const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const submit = async () => {
+    if (!form.shopName || !form.tenantName || !form.phoneNumber || !form.monthlyRent) {
+      showSnackbar('Please fill all required fields', 'warning');
+      return;
+    }
+    setSaving(true);
+    try {
+      const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
+      await updateShop(shop.id, {
+        shopName: form.shopName,
+        tenantName: form.tenantName,
+        phoneNumber: form.phoneNumber,
+        monthlyRent: Number(form.monthlyRent),
+        paidRent: Number(form.paidRent) || 0,
+        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
+        paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
+        remark: form.remark.trim() || undefined,
+      });
+      if (statusChangedToPaid) {
+        showSnackbar('Shop details saved. Please collect the payment.', 'info');
+        onClose();
+        onRequestCollect({ ...shop, shopName: form.shopName, tenantName: form.tenantName, monthlyRent: Number(form.monthlyRent) });
+      } else {
+        showSnackbar('Shop updated successfully', 'success');
+        onClose();
+      }
+    } catch { showSnackbar('Failed to update shop', 'error'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Modal open={true} onClose={onClose} title={`Edit Shop — ${shop.shopName}`}>
+      <div className="space-y-4">
+        {[
+          { label: 'Shop Name *', key: 'shopName', placeholder: 'e.g. Shop A-09' },
+          { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
+          { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
+          { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+            <input
+              type={f.type ?? 'text'} placeholder={f.placeholder}
+              value={form[f.key as keyof typeof form] as string}
+              onChange={e => set(f.key as keyof typeof form, e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+            />
+          </div>
+        ))}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+          <select
+            value={form.paymentStatus}
+            onChange={e => set('paymentStatus', e.target.value as Shop['paymentStatus'])}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          >
+            <option value="Due">Due</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
+          <input
+            type="number"
+            value={form.currentDue}
+            onChange={e => set('currentDue', e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
+          <textarea
+            value={form.remark}
+            onChange={e => set('remark', e.target.value)}
+            placeholder="Optional remark..."
+            rows={2}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+          />
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button onClick={submit} disabled={saving} className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60">{saving ? 'Saving...' : 'Save Changes'}</button>
+        </div>
+      </div>
+    </Modal>
+  );
 }
 
 export default function Shops() {
@@ -26,6 +132,7 @@ export default function Shops() {
   const [page, setPage]           = useState(1);
   const [selected, setSelected]   = useState<Shop | null>(null);
   const [collectShop, setCollectShop] = useState<Shop | null>(null);
+  const [editShop, setEditShop]   = useState<Shop | null>(null);
 
   const handleCollect = async (shop: Shop, amount: number, remark: string) => {
     const newPaid = shop.paidRent + amount;
@@ -131,14 +238,14 @@ export default function Shops() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Shop Name','Market','Tenant','Phone','Type','Monthly Rent','Paid Rent','Current Due','Due Date','Status','Action'].map(h => (
+                {['Shop Name','Market','Tenant','Phone','Type','Monthly Rent','Paid Rent','Current Due','Due Date','Status','Remark','Action'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {current.length === 0 ? (
-                <tr><td colSpan={11} className="text-center py-10 text-gray-400 text-sm">No shops found</td></tr>
+                <tr><td colSpan={12} className="text-center py-10 text-gray-400 text-sm">No shops found</td></tr>
               ) : current.map(s => (
                 <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{s.shopName}</td>
@@ -158,6 +265,7 @@ export default function Shops() {
                       {s.paymentStatus}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate" title={s.remark || ''}>{s.remark || '—'}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       {s.paymentStatus === 'Due' && s.currentDue > 0 && (
@@ -169,7 +277,10 @@ export default function Shops() {
                           Collect
                         </button>
                       )}
-                      <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors">
+                      <button onClick={() => setEditShop(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="Edit">
+                        <Pencil size={16} />
+                      </button>
+                      <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="View">
                         <Eye size={16} />
                       </button>
                     </div>
@@ -197,6 +308,7 @@ export default function Shops() {
       </div>
 
       {selected && <ShopDetailModal shop={selected} onClose={() => setSelected(null)} />}
+      {editShop && <EditShopModal shop={editShop} onClose={() => setEditShop(null)} onRequestCollect={(s) => setCollectShop(s)} />}
       {collectShop && (
         <CollectPaymentModal
           open={true}

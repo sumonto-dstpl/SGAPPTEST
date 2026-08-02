@@ -55,6 +55,7 @@ function mapShop(r: Row): Shop {
     shopType: r.shop_type as Shop['shopType'],
     startDate: r.start_date as string,
     endDate: r.end_date as string,
+    remark: (r.remark as string) || undefined,
   };
 }
 
@@ -67,12 +68,15 @@ function mapGarage(r: Row): Garage {
     vehicleNumber: r.vehicle_number as string,
     vehicleType: r.vehicle_type as Garage['vehicleType'],
     monthlyRent: r.monthly_rent as number,
+    paidRent: (r.paid_rent as number) ?? 0,
     paymentStatus: r.payment_status as Garage['paymentStatus'],
     currentDue: r.current_due as number,
     leaseEndDate: r.lease_end_date as string,
     leaseType: r.lease_type as Garage['leaseType'],
     address: (r.address as string) || undefined,
     startDate: r.start_date as string,
+    dueDate: (r.due_date as string) ?? '',
+    remark: (r.remark as string) || undefined,
   };
 }
 
@@ -88,6 +92,10 @@ function mapPayment(r: Row): Payment {
 }
 
 function mapBackup(r: Row): BackupRecord {
+  let snapshot: BackupRecord['snapshot'] | undefined;
+  if (r.snapshot) {
+    try { snapshot = JSON.parse(r.snapshot as string) as BackupRecord['snapshot']; } catch { snapshot = undefined; }
+  }
   return {
     id: r.id as string,
     name: r.name as string,
@@ -96,6 +104,7 @@ function mapBackup(r: Row): BackupRecord {
     createdAt: r.created_at_label as string,
     size: r.size_label as string,
     createdBy: r.created_by as string,
+    snapshot,
   };
 }
 
@@ -163,11 +172,11 @@ export const sqliteAdapter: DatabaseAdapter = {
     await conn.execute(
       `INSERT INTO shops
          (id, market_id, shop_name, tenant_name, phone_number, monthly_rent,
-          paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+          paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [id, data.marketId, data.shopName, data.tenantName, data.phoneNumber,
        data.monthlyRent, data.paidRent, data.currentDue, data.dueDate,
-       data.paymentStatus, data.shopType, data.startDate, data.endDate],
+       data.paymentStatus, data.shopType, data.startDate, data.endDate, data.remark ?? null],
     );
     return { id, ...data };
   },
@@ -178,7 +187,7 @@ export const sqliteAdapter: DatabaseAdapter = {
       shopName: 'shop_name', tenantName: 'tenant_name', phoneNumber: 'phone_number',
       monthlyRent: 'monthly_rent', paidRent: 'paid_rent', currentDue: 'current_due',
       dueDate: 'due_date', paymentStatus: 'payment_status', shopType: 'shop_type',
-      startDate: 'start_date', endDate: 'end_date',
+      startDate: 'start_date', endDate: 'end_date', remark: 'remark',
     };
     const parts: string[] = [];
     const vals: unknown[] = [];
@@ -209,11 +218,12 @@ export const sqliteAdapter: DatabaseAdapter = {
     await conn.execute(
       `INSERT INTO garages
          (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type,
-          monthly_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+          monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type,
+          address, start_date, due_date, remark)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [id, data.garageNo, data.ownerName, data.mobileNumber, data.vehicleNumber,
-       data.vehicleType, data.monthlyRent, data.paymentStatus, data.currentDue,
-       data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate],
+       data.vehicleType, data.monthlyRent, data.paidRent ?? 0, data.paymentStatus, data.currentDue,
+       data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate, data.dueDate ?? '', data.remark ?? null],
     );
     return { id, ...data };
   },
@@ -222,9 +232,10 @@ export const sqliteAdapter: DatabaseAdapter = {
     const conn = await db();
     const map: Record<string, string> = {
       ownerName: 'owner_name', mobileNumber: 'mobile_number', vehicleNumber: 'vehicle_number',
-      vehicleType: 'vehicle_type', monthlyRent: 'monthly_rent', paymentStatus: 'payment_status',
-      currentDue: 'current_due', leaseEndDate: 'lease_end_date', leaseType: 'lease_type',
-      address: 'address', startDate: 'start_date',
+      vehicleType: 'vehicle_type', monthlyRent: 'monthly_rent', paidRent: 'paid_rent',
+      paymentStatus: 'payment_status', currentDue: 'current_due', leaseEndDate: 'lease_end_date',
+      leaseType: 'lease_type', address: 'address', startDate: 'start_date', dueDate: 'due_date',
+      remark: 'remark',
     };
     const parts: string[] = [];
     const vals: unknown[] = [];
@@ -266,9 +277,9 @@ export const sqliteAdapter: DatabaseAdapter = {
     const id = uid();
     await conn.execute(
       `INSERT INTO backups
-         (id, name, description, backup_type, created_at_label, size_label, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, data.name, data.description, data.type, data.createdAt, data.size, data.createdBy],
+         (id, name, description, backup_type, created_at_label, size_label, created_by, snapshot)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id, data.name, data.description, data.type, data.createdAt, data.size, data.createdBy, data.snapshot ? JSON.stringify(data.snapshot) : null],
     );
     return { id, ...data };
   },
@@ -292,14 +303,14 @@ export const sqliteAdapter: DatabaseAdapter = {
     }
     for (const s of data.shops) {
       await conn.execute(
-        `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-        [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate],
+        `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.remark ?? null],
       );
     }
     for (const g of data.garages) {
       await conn.execute(
-        `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-        [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate],
+        `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, remark) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+        [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.remark ?? null],
       );
     }
     for (const p of data.payments) {

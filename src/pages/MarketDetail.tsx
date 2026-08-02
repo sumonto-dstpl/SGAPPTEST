@@ -8,6 +8,7 @@ import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from '../components/Modal';
 import ShopDetailModal from '../components/ShopDetailModal';
+import CollectPaymentModal from '../components/CollectPaymentModal';
 
 const PER_PAGE = 10;
 
@@ -162,7 +163,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
 
 // ─── Edit Shop Modal ───────────────────────────────────────────────────────────
 
-function EditShopModal({ shop, onClose }: { shop: Shop; onClose: () => void }) {
+function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClose: () => void; onRequestCollect: (shop: Shop) => void }) {
   const { updateShop } = useData();
   const { showSnackbar } = useSnackbar();
   const [saving, setSaving] = useState(false);
@@ -171,6 +172,10 @@ function EditShopModal({ shop, onClose }: { shop: Shop; onClose: () => void }) {
     tenantName: shop.tenantName,
     phoneNumber: shop.phoneNumber,
     monthlyRent: String(shop.monthlyRent),
+    paidRent: String(shop.paidRent),
+    paymentStatus: shop.paymentStatus,
+    currentDue: String(shop.currentDue),
+    remark: shop.remark ?? '',
   });
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -182,14 +187,25 @@ function EditShopModal({ shop, onClose }: { shop: Shop; onClose: () => void }) {
     }
     setSaving(true);
     try {
+      const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
         phoneNumber: form.phoneNumber,
         monthlyRent: Number(form.monthlyRent),
+        paidRent: Number(form.paidRent) || 0,
+        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
+        paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
+        remark: form.remark.trim() || undefined,
       });
-      showSnackbar('Shop updated successfully', 'success');
-      onClose();
+      if (statusChangedToPaid) {
+        showSnackbar('Shop details saved. Please collect the payment.', 'info');
+        onClose();
+        onRequestCollect({ ...shop, shopName: form.shopName, tenantName: form.tenantName, monthlyRent: Number(form.monthlyRent) });
+      } else {
+        showSnackbar('Shop updated successfully', 'success');
+        onClose();
+      }
     } catch { showSnackbar('Failed to update shop', 'error'); }
     finally { setSaving(false); }
   };
@@ -202,17 +218,48 @@ function EditShopModal({ shop, onClose }: { shop: Shop; onClose: () => void }) {
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
             <input
               type={f.type ?? 'text'} placeholder={f.placeholder}
-              value={form[f.key as keyof typeof form]}
+              value={form[f.key as keyof typeof form] as string}
               onChange={e => set(f.key as keyof typeof form, e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
             />
           </div>
         ))}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+          <select
+            value={form.paymentStatus}
+            onChange={e => setForm(p => ({ ...p, paymentStatus: e.target.value as Shop['paymentStatus'] }))}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          >
+            <option value="Due">Due</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
+          <input
+            type="number"
+            value={form.currentDue}
+            onChange={e => set('currentDue', e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
+          <textarea
+            value={form.remark}
+            onChange={e => set('remark', e.target.value)}
+            placeholder="Optional remark..."
+            rows={2}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+          />
+        </div>
         <div className="flex gap-3 pt-2">
           <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={submit} disabled={saving}
@@ -232,7 +279,7 @@ interface Props { market: Market; onBack: () => void }
 export default function MarketDetail({ market, onBack }: Props) {
   const { shops, deleteShop, updateShop, addPayment, refresh } = useData();
   const { showSnackbar } = useSnackbar();
-  const [collecting, setCollecting] = useState<string | null>(null);
+  const [collectShop, setCollectShop] = useState<Shop | null>(null);
 
   const [tab, setTab]         = useState<'Rented' | 'Leased'>('Rented');
   const [search, setSearch]   = useState('');
@@ -258,20 +305,24 @@ export default function MarketDetail({ market, onBack }: Props) {
   const totalPaid  = marketShops.reduce((s, x) => s + x.paidRent, 0);
   const totalDue   = marketShops.reduce((s, x) => s + x.currentDue, 0);
 
-  const handleCollect = async (shop: Shop) => {
-    setCollecting(shop.id);
-    try {
-      await updateShop(shop.id, { paidRent: shop.monthlyRent, currentDue: 0, paymentStatus: 'Paid' });
-      await addPayment({
-        date: new Date().toISOString().split('T')[0],
-        name: `${shop.tenantName} (${shop.shopName})`,
-        type: 'Shop',
-        amount: shop.currentDue,
-        reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      });
-      showSnackbar(`₹${shop.currentDue.toLocaleString('en-IN')} collected from ${shop.shopName}`, 'success');
-    } catch { showSnackbar('Failed to collect payment', 'error'); }
-    finally { setCollecting(null); }
+  const handleCollect = async (shop: Shop, amount: number, remark: string) => {
+    const newPaid = shop.paidRent + amount;
+    const newDue = Math.max(0, shop.currentDue - amount);
+    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
+    await addPayment({
+      date: new Date().toISOString().split('T')[0],
+      name: `${shop.tenantName} (${shop.shopName})`,
+      type: 'Shop',
+      amount,
+      reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+      remark: remark || undefined,
+    });
+    showSnackbar(
+      `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
+      'success',
+    );
+    setCollectShop(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -387,12 +438,13 @@ export default function MarketDetail({ market, onBack }: Props) {
                 <th className="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Current Due (₹)</th>
                 <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Due Date</th>
                 <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment Status</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Remark</th>
                 <th className="text-right    px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {pageShops.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-gray-400">No {tab.toLowerCase()} shops found</td></tr>
+                <tr><td colSpan={9} className="text-center py-12 text-gray-400">No {tab.toLowerCase()} shops found</td></tr>
               ) : pageShops.map(shop => (
                 <tr key={shop.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3.5 font-bold text-gray-900">{shop.shopName}</td>
@@ -409,17 +461,17 @@ export default function MarketDetail({ market, onBack }: Props) {
                       {shop.paymentStatus}
                     </span>
                   </td>
+                  <td className="px-5 py-3.5 text-gray-600 max-w-[200px] truncate" title={shop.remark || ''}>{shop.remark || '—'}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-1">
                       {shop.paymentStatus === 'Due' && (
                         <button
-                          onClick={() => handleCollect(shop)}
-                          disabled={collecting === shop.id}
+                          onClick={() => setCollectShop(shop)}
                           title={`Collect ₹${shop.currentDue.toLocaleString('en-IN')}`}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap"
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
                         >
                           <Banknote size={13} />
-                          {collecting === shop.id ? '...' : `Collect`}
+                          Collect
                         </button>
                       )}
                       {/* <button onClick={() => setSelected(shop)}
@@ -490,7 +542,16 @@ export default function MarketDetail({ market, onBack }: Props) {
 
       {addOpen  && <AddShopModal open={addOpen} onClose={() => setAddOpen(false)} market={market} />}
       {selected && <ShopDetailModal shop={selected} onClose={() => setSelected(null)} />}
-      {editShop && <EditShopModal shop={editShop} onClose={() => setEditShop(null)} />}
+      {editShop && <EditShopModal shop={editShop} onClose={() => setEditShop(null)} onRequestCollect={(s) => setCollectShop(s)} />}
+      {collectShop && (
+        <CollectPaymentModal
+          open={true}
+          onClose={() => setCollectShop(null)}
+          title={`Collect Payment — ${collectShop.shopName}`}
+          currentDue={collectShop.currentDue}
+          onConfirm={(amt, rem) => handleCollect(collectShop, amt, rem)}
+        />
+      )}
 
       {/* Click outside to close menu */}
       {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}

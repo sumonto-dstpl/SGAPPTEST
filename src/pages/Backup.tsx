@@ -36,18 +36,18 @@ function exportExcel(markets: unknown[], shops: unknown[], garages: unknown[], p
     'Monthly Rent': m.monthlyRent, 'Address': m.address ?? '', 'Created': m.createdAt,
   }));
 
-  const sRows = (shops as { id: string; shopName: string; marketId: string; tenantName: string; phoneNumber: string; monthlyRent: number; paidRent: number; currentDue: number; dueDate: string; paymentStatus: string; shopType: string; startDate: string; endDate: string }[]).map(s => ({
+  const sRows = (shops as { id: string; shopName: string; marketId: string; tenantName: string; phoneNumber: string; monthlyRent: number; paidRent: number; currentDue: number; dueDate: string; paymentStatus: string; shopType: string; startDate: string; endDate: string; remark?: string }[]).map(s => ({
     'Shop ID': s.id, 'Shop Name': s.shopName, 'Market ID': s.marketId, 'Tenant': s.tenantName,
     'Phone': s.phoneNumber, 'Monthly Rent': s.monthlyRent, 'Paid Rent': s.paidRent,
     'Current Due': s.currentDue, 'Due Date': s.dueDate, 'Status': s.paymentStatus,
-    'Type': s.shopType, 'Start': s.startDate, 'End': s.endDate,
+    'Type': s.shopType, 'Start': s.startDate, 'End': s.endDate, 'Remark': s.remark ?? '',
   }));
 
-  const gRows = (garages as { id: string; garageNo: string; ownerName: string; mobileNumber: string; vehicleNumber: string; vehicleType: string; monthlyRent: number; paymentStatus: string; currentDue: number; leaseEndDate: string; leaseType: string; startDate: string; dueDate: string }[]).map(g => ({
+  const gRows = (garages as { id: string; garageNo: string; ownerName: string; mobileNumber: string; vehicleNumber: string; vehicleType: string; monthlyRent: number; paidRent: number; paymentStatus: string; currentDue: number; leaseEndDate: string; leaseType: string; startDate: string; dueDate: string; address?: string; remark?: string }[]).map(g => ({
     'Garage ID': g.id, 'Garage No': g.garageNo, 'Owner': g.ownerName, 'Mobile': g.mobileNumber,
     'Vehicle No': g.vehicleNumber, 'Vehicle Type': g.vehicleType, 'Monthly Rent': g.monthlyRent,
-    'Status': g.paymentStatus, 'Current Due': g.currentDue, 'Lease End': g.leaseEndDate,
-    'Lease Type': g.leaseType, 'Start': g.startDate, 'Due Date': g.dueDate,
+    'Paid Rent': g.paidRent, 'Status': g.paymentStatus, 'Current Due': g.currentDue, 'Lease End': g.leaseEndDate,
+    'Lease Type': g.leaseType, 'Start': g.startDate, 'Due Date': g.dueDate, 'Address': g.address ?? '', 'Remark': g.remark ?? '',
   }));
 
   const pRows = (payments as { id: string; date: string; name: string; type: string; amount: number; reference: string }[]).map(p => ({
@@ -134,6 +134,7 @@ export default function Backup() {
       await addBackup({
         name: backupName.trim(), description: description || 'Manual backup',
         type: backupType, createdAt: label, size, createdBy: 'Admin',
+        snapshot: { markets, shops, garages, payments },
       });
 
       showSnackbar(`Backup "${backupName}" created & downloaded as Excel`, 'success');
@@ -157,13 +158,22 @@ export default function Backup() {
     if (!selectedBackupId) { showSnackbar('Please select a backup first', 'warning'); return; }
     const backup = backups.find(b => b.id === selectedBackupId);
     if (!backup) { showSnackbar('Backup not found', 'error'); return; }
-    // For history restore, we re-download the backup file and restore it automatically
+    if (!backup.snapshot) {
+      showSnackbar('This backup does not contain a data snapshot. Please restore from the Excel file instead.', 'warning');
+      setSelectedBackupId('');
+      return;
+    }
+    if (!window.confirm(`Restore data from backup "${backup.name}"? This will overwrite ALL current data.`)) return;
     setRestoring(true);
     try {
-      // Re-export current data snapshot as the backup file, then restore it
-      // Since backups are stored as records (not files), we restore from current snapshot
-      // In a real system this would fetch the stored backup file
-      showSnackbar(`Restored from backup "${backup.name}"`, 'success');
+      await restoreAll({
+        markets: backup.snapshot.markets,
+        shops:   backup.snapshot.shops,
+        garages: backup.snapshot.garages,
+        payments: backup.snapshot.payments,
+      });
+      const totalRecords = backup.snapshot.markets.length + backup.snapshot.shops.length + backup.snapshot.garages.length + backup.snapshot.payments.length;
+      showSnackbar(`Restored from backup "${backup.name}" — ${totalRecords} total records`, 'success');
     } catch { showSnackbar('Failed to restore from backup', 'error'); }
     setRestoring(false);
     setSelectedBackupId('');
@@ -238,6 +248,7 @@ export default function Backup() {
         shopType: (r['Type'] === 'Leased' ? 'Leased' : 'Rented') as Shop['shopType'],
         startDate: String(r['Start'] ?? ''),
         endDate: String(r['End'] ?? ''),
+        remark: r['Remark'] ? String(r['Remark']) : undefined,
       }));
 
       const restoredGarages: Garage[] = gRows.map((r) => ({
@@ -248,6 +259,7 @@ export default function Backup() {
         vehicleNumber: String(r['Vehicle No'] ?? ''),
         vehicleType: (['Car', 'Bike', 'Truck', 'Other'].includes(String(r['Vehicle Type'])) ? String(r['Vehicle Type']) : 'Other') as Garage['vehicleType'],
         monthlyRent: Number(r['Monthly Rent'] ?? 0),
+        paidRent: Number(r['Paid Rent'] ?? 0),
         paymentStatus: (r['Status'] === 'Paid' ? 'Paid' : 'Due') as Garage['paymentStatus'],
         currentDue: Number(r['Current Due'] ?? 0),
         leaseEndDate: String(r['Lease End'] ?? ''),
@@ -255,6 +267,7 @@ export default function Backup() {
         startDate: String(r['Start'] ?? ''),
         dueDate: String(r['Due Date'] ?? r['Lease End'] ?? ''),
         address: r['Address'] ? String(r['Address']) : undefined,
+        remark: r['Remark'] ? String(r['Remark']) : undefined,
       }));
 
       const restoredPayments: Payment[] = pRows.map((r) => ({
