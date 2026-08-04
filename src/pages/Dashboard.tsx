@@ -54,7 +54,7 @@ export default function Dashboard({ onNavigate }: Props) {
   ].slice(0, 4);
 
   const todayPayments = payments.filter(p => p.date === new Date().toISOString().split('T')[0]);
-  const todayTotal = todayPayments.reduce((s, p) => s + p.amount, 0) || 14000;
+  const todayTotal = todayPayments.reduce((s, p) => s + p.amount, 0) || 0;
   const totalTenants = shops.length + garages.length;
 
   return (
@@ -183,7 +183,7 @@ export default function Dashboard({ onNavigate }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             { label: "Payments Received", value: fmt(todayTotal), icon: <FileText size={20} className="text-blue-600" />, color: "bg-blue-50" },
-            { label: "No. of Payments", value: String(todayPayments.length || 3), icon: <CheckCircle2 size={20} className="text-green-600" />, color: "bg-green-50" },
+            { label: "No. of Payments", value: String(todayPayments.length || 0), icon: <CheckCircle2 size={20} className="text-green-600" />, color: "bg-green-50" },
             { label: "Total Tenants", value: String(totalTenants), icon: <Users size={20} className="text-amber-600" />, color: "bg-amber-50" },
             { label: "Pending Payments", value: String(allDue.length), icon: <AlertTriangle size={20} className="text-red-500" />, color: "bg-red-50" },
           ].map((item, i) => (
