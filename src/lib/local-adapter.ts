@@ -5,7 +5,7 @@
  */
 
 import { Market, Shop, Garage, Payment, BackupRecord } from '../types';
-import { DatabaseAdapter, AllData } from './database';
+import { DatabaseAdapter, AllData, AdapterContext } from './database';
 
 // ─── Seed data (embedded to keep adapter self-contained) ─────────────────────
 
@@ -74,13 +74,16 @@ const SEED_BACKUPS: BackupRecord[] = [
 
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 
-const K = {
-  markets:  'pgms_v2_markets',
-  shops:    'pgms_v2_shops',
-  garages:  'pgms_v2_garages',
-  payments: 'pgms_v2_payments',
-  backups:  'pgms_v2_backups',
-} as const;
+function makeKeys(username: string, role: string) {
+  const prefix = role === 'user' ? `pgms_u_${username}` : 'pgms_v2';
+  return {
+    markets:  `${prefix}_markets`,
+    shops:    `${prefix}_shops`,
+    garages:  `${prefix}_garages`,
+    payments: `${prefix}_payments`,
+    backups:  `${prefix}_backups`,
+  } as const;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -98,101 +101,96 @@ function save<T>(key: string, data: T[]): void {
 
 const uid = (): string => crypto.randomUUID();
 
-// ─── Adapter ─────────────────────────────────────────────────────────────────
+// ─── Adapter factory ───────────────────────────────────────────────────────────
 
-export const localAdapter: DatabaseAdapter = {
-  async loadAll(): Promise<AllData> {
-    return {
-      markets:  load(K.markets,  SEED_MARKETS),
-      shops:    load(K.shops,    SEED_SHOPS),
-      garages:  load(K.garages,  SEED_GARAGES),
-      payments: load(K.payments, SEED_PAYMENTS),
-      backups:  load(K.backups,  SEED_BACKUPS),
-    };
-  },
+export function createLocalAdapter(ctx: AdapterContext): DatabaseAdapter {
+  const K = makeKeys(ctx.username, ctx.role);
+  const useSeeds = ctx.role !== 'user';
+  const sM  = useSeeds ? SEED_MARKETS  : [];
+  const sS  = useSeeds ? SEED_SHOPS    : [];
+  const sG  = useSeeds ? SEED_GARAGES  : [];
+  const sP  = useSeeds ? SEED_PAYMENTS : [];
+  const sB  = useSeeds ? SEED_BACKUPS  : [];
 
-  // ── Markets ──────────────────────────────────────────────────────────────
-  async addMarket(data): Promise<Market> {
-    const list = load<Market>(K.markets, SEED_MARKETS);
-    const m: Market = { id: uid(), ...data, createdAt: new Date().toISOString().split('T')[0] };
-    save(K.markets, [...list, m]);
-    return m;
-  },
-  async updateMarket(id, patch): Promise<Market> {
-    const list = load<Market>(K.markets, SEED_MARKETS).map(m => m.id === id ? { ...m, ...patch } : m);
-    save(K.markets, list);
-    return list.find(m => m.id === id)!;
-  },
-  async deleteMarket(id): Promise<void> {
-    save(K.markets, load<Market>(K.markets, SEED_MARKETS).filter(m => m.id !== id));
-    save(K.shops,   load<Shop>(K.shops, SEED_SHOPS).filter(s => s.marketId !== id));
-  },
-
-  // ── Shops ────────────────────────────────────────────────────────────────
-  async addShop(data): Promise<Shop> {
-    const list = load<Shop>(K.shops, SEED_SHOPS);
-    const s: Shop = { id: uid(), ...data };
-    save(K.shops, [...list, s]);
-    return s;
-  },
-  async updateShop(id, patch): Promise<Shop> {
-    const list = load<Shop>(K.shops, SEED_SHOPS).map(s => s.id === id ? { ...s, ...patch } : s);
-    save(K.shops, list);
-    return list.find(s => s.id === id)!;
-  },
-  async deleteShop(id): Promise<void> {
-    save(K.shops, load<Shop>(K.shops, SEED_SHOPS).filter(s => s.id !== id));
-  },
-
-  // ── Garages ──────────────────────────────────────────────────────────────
-  async addGarage(data): Promise<Garage> {
-    const list = load<Garage>(K.garages, SEED_GARAGES);
-    const g: Garage = { id: uid(), ...data };
-    save(K.garages, [...list, g]);
-    return g;
-  },
-  async updateGarage(id, patch): Promise<Garage> {
-    const list = load<Garage>(K.garages, SEED_GARAGES).map(g => g.id === id ? { ...g, ...patch } : g);
-    save(K.garages, list);
-    return list.find(g => g.id === id)!;
-  },
-  async deleteGarage(id): Promise<void> {
-    save(K.garages, load<Garage>(K.garages, SEED_GARAGES).filter(g => g.id !== id));
-  },
-
-  // ── Payments ─────────────────────────────────────────────────────────────
-  async addPayment(data): Promise<Payment> {
-    const list = load<Payment>(K.payments, SEED_PAYMENTS);
-    const p: Payment = { id: uid(), ...data };
-    save(K.payments, [p, ...list]);
-    return p;
-  },
-
-  // ── Backups ───────────────────────────────────────────────────────────────
-  async addBackup(data): Promise<BackupRecord> {
-    const list = load<BackupRecord>(K.backups, SEED_BACKUPS);
-    const b: BackupRecord = { id: uid(), ...data };
-    save(K.backups, [b, ...list]);
-    return b;
-  },
-  async deleteBackup(id): Promise<void> {
-    save(K.backups, load<BackupRecord>(K.backups, SEED_BACKUPS).filter(b => b.id !== id));
-  },
-
-  async restoreAll(data): Promise<void> {
-    save(K.markets,  data.markets);
-    save(K.shops,    data.shops);
-    save(K.garages,  data.garages);
-    save(K.payments, data.payments);
-  },
-};
-
-// ─── Public helper: get raw data for Excel export ─────────────────────────────
-export function getRawData() {
   return {
-    markets:  load<Market>(K.markets, SEED_MARKETS),
-    shops:    load<Shop>(K.shops, SEED_SHOPS),
-    garages:  load<Garage>(K.garages, SEED_GARAGES),
-    payments: load<Payment>(K.payments, SEED_PAYMENTS),
+    async loadAll(): Promise<AllData> {
+      return {
+        markets:  load(K.markets,  sM),
+        shops:    load(K.shops,    sS),
+        garages:  load(K.garages,  sG),
+        payments: load(K.payments, sP),
+        backups:  load(K.backups,  sB),
+      };
+    },
+
+    async addMarket(data): Promise<Market> {
+      const list = load<Market>(K.markets, sM);
+      const m: Market = { id: uid(), ...data, createdAt: new Date().toISOString().split('T')[0] };
+      save(K.markets, [...list, m]);
+      return m;
+    },
+    async updateMarket(id, patch): Promise<Market> {
+      const list = load<Market>(K.markets, sM).map(m => m.id === id ? { ...m, ...patch } : m);
+      save(K.markets, list);
+      return list.find(m => m.id === id)!;
+    },
+    async deleteMarket(id): Promise<void> {
+      save(K.markets, load<Market>(K.markets, sM).filter(m => m.id !== id));
+      save(K.shops,   load<Shop>(K.shops, sS).filter(s => s.marketId !== id));
+    },
+
+    async addShop(data): Promise<Shop> {
+      const list = load<Shop>(K.shops, sS);
+      const s: Shop = { id: uid(), ...data };
+      save(K.shops, [...list, s]);
+      return s;
+    },
+    async updateShop(id, patch): Promise<Shop> {
+      const list = load<Shop>(K.shops, sS).map(s => s.id === id ? { ...s, ...patch } : s);
+      save(K.shops, list);
+      return list.find(s => s.id === id)!;
+    },
+    async deleteShop(id): Promise<void> {
+      save(K.shops, load<Shop>(K.shops, sS).filter(s => s.id !== id));
+    },
+
+    async addGarage(data): Promise<Garage> {
+      const list = load<Garage>(K.garages, sG);
+      const g: Garage = { id: uid(), ...data };
+      save(K.garages, [...list, g]);
+      return g;
+    },
+    async updateGarage(id, patch): Promise<Garage> {
+      const list = load<Garage>(K.garages, sG).map(g => g.id === id ? { ...g, ...patch } : g);
+      save(K.garages, list);
+      return list.find(g => g.id === id)!;
+    },
+    async deleteGarage(id): Promise<void> {
+      save(K.garages, load<Garage>(K.garages, sG).filter(g => g.id !== id));
+    },
+
+    async addPayment(data): Promise<Payment> {
+      const list = load<Payment>(K.payments, sP);
+      const p: Payment = { id: uid(), ...data };
+      save(K.payments, [p, ...list]);
+      return p;
+    },
+
+    async addBackup(data): Promise<BackupRecord> {
+      const list = load<BackupRecord>(K.backups, sB);
+      const b: BackupRecord = { id: uid(), ...data };
+      save(K.backups, [b, ...list]);
+      return b;
+    },
+    async deleteBackup(id): Promise<void> {
+      save(K.backups, load<BackupRecord>(K.backups, sB).filter(b => b.id !== id));
+    },
+
+    async restoreAll(data): Promise<void> {
+      save(K.markets,  data.markets);
+      save(K.shops,    data.shops);
+      save(K.garages,  data.garages);
+      save(K.payments, data.payments);
+    },
   };
 }

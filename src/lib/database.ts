@@ -45,11 +45,16 @@ export function isTauriContext(): boolean {
 
 // ─── Adapter Factory ─────────────────────────────────────────────────────────
 
-export async function createAdapter(): Promise<DatabaseAdapter> {
+export interface AdapterContext {
+  username: string;
+  role: 'admin' | 'demo' | 'user';
+}
+
+export async function createAdapter(ctx: AdapterContext): Promise<DatabaseAdapter> {
   if (isTauriContext()) {
     const { sqliteAdapter } = await import('./sqlite-adapter');
     return sqliteAdapter;
   }
-  const { localAdapter } = await import('./local-adapter');
-  return localAdapter;
+  const { createLocalAdapter } = await import('./local-adapter');
+  return createLocalAdapter(ctx);
 }

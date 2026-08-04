@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AuthUser {
   username: string;
-  role: 'admin' | 'demo';
+  role: 'admin' | 'demo' | 'user';
 }
 
 interface AuthContextType {
@@ -19,6 +19,8 @@ const CREDENTIALS_KEY = 'mullick_fintech_credentials';
 const DEFAULT_CREDENTIALS = [
   { username: 'admin', password: 'admin123', role: 'admin' as const },
   { username: 'Admin', password: 'admin123', role: 'admin' as const },
+  { username: 'user1', password: 'user@123', role: 'user' as const },
+  { username: 'user2', password: 'user@123', role: 'user' as const },
 ];
 
 function loadCredentials(): typeof DEFAULT_CREDENTIALS {

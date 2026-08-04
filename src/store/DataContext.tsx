@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { Market, Shop, Garage, Payment, BackupRecord } from '../types';
 import { DatabaseAdapter, createAdapter } from '../lib/database';
+import { useAuth } from '../contexts/AuthContext';
 
 // ─── Context type ─────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ const DataContext = createContext<DataContextType | null>(null);
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const adapterRef = useRef<DatabaseAdapter | null>(null);
 
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -52,7 +54,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       if (!adapterRef.current) {
-        adapterRef.current = await createAdapter();
+        adapterRef.current = await createAdapter({
+          username: user?.username ?? 'admin',
+          role: user?.role ?? 'admin',
+        });
       }
       const data = await adapterRef.current.loadAll();
       setMarkets(data.markets);
@@ -71,7 +76,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Resolve the adapter (already initialized by loadAll)
   const adapter = async (): Promise<DatabaseAdapter> => {
-    if (!adapterRef.current) adapterRef.current = await createAdapter();
+    if (!adapterRef.current) adapterRef.current = await createAdapter({
+      username: user?.username ?? 'admin',
+      role: user?.role ?? 'admin',
+    });
     return adapterRef.current;
   };
 
@@ -182,7 +190,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const restoreAll = async (data: { markets: Market[]; shops: Shop[]; garages: Garage[]; payments: Payment[] }) => {
-    await (await adapter()).restoreAll(data);
+    await (await adapter()).restoreAll({ ...data, backups: [] });
     setMarkets(data.markets);
     setShops(data.shops);
     setGarages(data.garages);

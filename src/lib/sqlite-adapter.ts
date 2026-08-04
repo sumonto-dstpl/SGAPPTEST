@@ -88,6 +88,7 @@ function mapPayment(r: Row): Payment {
     type: r.payment_type as Payment['type'],
     amount: r.amount as number,
     reference: r.reference as string,
+    remark: (r.remark as string) || undefined,
   };
 }
 
@@ -264,9 +265,9 @@ export const sqliteAdapter: DatabaseAdapter = {
     const conn = await db();
     const id = uid();
     await conn.execute(
-      `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
-      [id, data.date, data.name, data.type, data.amount, data.reference],
+      `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [id, data.date, data.name, data.type, data.amount, data.reference, data.remark ?? null],
     );
     return { id, ...data };
   },
@@ -315,8 +316,8 @@ export const sqliteAdapter: DatabaseAdapter = {
     }
     for (const p of data.payments) {
       await conn.execute(
-        `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference) VALUES ($1,$2,$3,$4,$5,$6)`,
-        [p.id, p.date, p.name, p.type, p.amount, p.reference],
+        `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [p.id, p.date, p.name, p.type, p.amount, p.reference, p.remark ?? null],
       );
     }
   },
