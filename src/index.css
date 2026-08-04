@@ -17,3 +17,11 @@
 .animate-fade-in {
   animation: fade-in 0.2s ease-out forwards;
 }
+
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
+input[type="password"]::-ms-clear {
+  display: none;
+}
