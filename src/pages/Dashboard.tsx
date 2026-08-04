@@ -66,7 +66,7 @@ export default function Dashboard({ onNavigate }: Props) {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           label="Total Markets" value={markets.length}
           sub={`Active Markets ${markets.length}`}
@@ -96,7 +96,7 @@ export default function Dashboard({ onNavigate }: Props) {
       </div>
 
       {/* Tables row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Payments */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
@@ -108,6 +108,7 @@ export default function Dashboard({ onNavigate }: Props) {
               View All
             </button> */}
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 bg-gray-50">
@@ -128,6 +129,7 @@ export default function Dashboard({ onNavigate }: Props) {
               ))}
             </tbody>
           </table>
+          </div>
           <div className="px-5 py-3 border-t border-gray-50 flex items-center gap-2">
             <FileText size={14} className="text-gray-400" />
             <span className="text-xs text-gray-400">Showing latest {recentPayments.length} payments</span>
@@ -145,6 +147,7 @@ export default function Dashboard({ onNavigate }: Props) {
               View All
             </button> */}
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-gray-500 bg-gray-50">
@@ -163,6 +166,7 @@ export default function Dashboard({ onNavigate }: Props) {
               ))}
             </tbody>
           </table>
+          </div>
           <div className="px-5 py-3 border-t border-gray-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-500" />
@@ -176,7 +180,7 @@ export default function Dashboard({ onNavigate }: Props) {
       {/* Today's Overview */}
       <div>
         <h2 className="text-base font-semibold text-blue-600 mb-3">Today's Overview</h2>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             { label: "Payments Received", value: fmt(todayTotal), icon: <FileText size={20} className="text-blue-600" />, color: "bg-blue-50" },
             { label: "No. of Payments", value: String(todayPayments.length || 3), icon: <CheckCircle2 size={20} className="text-green-600" />, color: "bg-green-50" },

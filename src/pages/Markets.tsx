@@ -14,14 +14,17 @@ function AddMarketModal({ open, onClose }: { open: boolean; onClose: () => void 
 
   const [saving, setSaving] = useState(false);
   const submit = async () => {
-    if (!form.name || !form.phoneNumber || !form.monthlyRent) return;
+    if (!form.name || !form.phoneNumber) {
+      showSnackbar('Please fill all required fields', 'warning');
+      return;
+    }
     if (markets.some(m => m.name.toLowerCase() === form.name.trim().toLowerCase())) {
       showSnackbar(`Market name "${form.name.trim()}" already exists`, 'warning');
       return;
     }
     setSaving(true);
     try {
-      await addMarket({ name: form.name, phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent), address: form.address });
+      await addMarket({ name: form.name.trim(), phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent) || 0, address: form.address });
       showSnackbar(`${form.name} added successfully`, 'success');
       setForm({ name: '', phoneNumber: '', monthlyRent: '', address: '' });
       onClose();
@@ -146,7 +149,7 @@ export default function Markets({ onViewMarket }: Props) {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Markets</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage all registered markets</p>
@@ -168,7 +171,7 @@ export default function Markets({ onViewMarket }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { label: 'Total Markets', value: markets.length, sub: 'All registered markets', icon: <Store size={20} className="text-blue-600" />, color: 'bg-blue-50', textColor: 'text-blue-700' },
           { label: 'Total Rents', value: `₹ ${totalRents.toLocaleString('en-IN')}`, sub: 'Total expected rent', icon: <IndianRupee size={20} className="text-green-600" />, color: 'bg-green-50', textColor: 'text-green-700' },
@@ -187,7 +190,7 @@ export default function Markets({ onViewMarket }: Props) {
       </div>
 
       {/* Search */}
-      <div className="relative w-80">
+      <div className="relative w-full max-w-sm">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           value={search}
@@ -204,6 +207,7 @@ export default function Markets({ onViewMarket }: Props) {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
@@ -259,6 +263,7 @@ export default function Markets({ onViewMarket }: Props) {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination */}
         <div className="px-5 py-4 border-t border-gray-50 flex items-center justify-between">

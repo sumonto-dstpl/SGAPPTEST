@@ -108,7 +108,7 @@ export default function Settings() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile */}
         <Section title="Profile Settings" icon={<User size={17} />}>
           <div className="space-y-0">

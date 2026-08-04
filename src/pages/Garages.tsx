@@ -411,7 +411,7 @@ export default function Garages() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Garages</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage all registered garages</p>
@@ -431,7 +431,7 @@ export default function Garages() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { label: 'Total Garages', value: garages.length, sub: 'All registered garages', icon: <Car size={20} className="text-blue-600" />, color: 'bg-blue-50', textColor: 'text-blue-700' },
           { label: 'Total Rents', value: `₹ ${totalRent.toLocaleString('en-IN')}`, sub: 'Total expected rent', icon: <IndianRupee size={20} className="text-green-600" />, color: 'bg-green-50', textColor: 'text-green-700' },
@@ -451,7 +451,7 @@ export default function Garages() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative w-80">
+        <div className="relative w-full max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
@@ -475,6 +475,7 @@ export default function Garages() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
@@ -543,6 +544,7 @@ export default function Garages() {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination */}
         <div className="px-5 py-4 border-t border-gray-50 flex items-center justify-between">
