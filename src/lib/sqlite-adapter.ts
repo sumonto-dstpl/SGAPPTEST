@@ -4,13 +4,16 @@
  * Uses @tauri-apps/plugin-sql to execute queries against the local SQLite file
  * (sqlite:pgms.db) that is created/migrated by the Rust side (tauri-plugin-sql).
  *
+ * Per-user isolation: every table has an `owner` column. Admin/demo share
+ * owner='admin'; each regular user sees only rows where owner = their username.
+ *
  * Column naming: DB uses snake_case; JS types use camelCase. This file handles
  * the mapping in both directions.
  */
 
 import Database from '@tauri-apps/plugin-sql';
 import { Market, Shop, Garage, Payment, BackupRecord } from '../types';
-import { DatabaseAdapter, AllData } from './database';
+import { DatabaseAdapter, AllData, AdapterContext } from './database';
 
 // ─── Singleton DB connection ──────────────────────────────────────────────────
 
@@ -109,216 +112,223 @@ function mapBackup(r: Row): BackupRecord {
   };
 }
 
-// ─── Adapter implementation ───────────────────────────────────────────────────
+// ─── Adapter factory ──────────────────────────────────────────────────────────
 
-export const sqliteAdapter: DatabaseAdapter = {
-  // ── Load all ────────────────────────────────────────────────────────────────
-  async loadAll(): Promise<AllData> {
-    const conn = await db();
-    const [markets, shops, garages, payments, backups] = await Promise.all([
-      conn.select<Row[]>('SELECT * FROM markets ORDER BY name'),
-      conn.select<Row[]>('SELECT * FROM shops ORDER BY shop_name'),
-      conn.select<Row[]>('SELECT * FROM garages ORDER BY garage_no'),
-      conn.select<Row[]>('SELECT * FROM payments ORDER BY created_at DESC'),
-      conn.select<Row[]>('SELECT * FROM backups ORDER BY created_at DESC'),
-    ]);
-    return {
-      markets: markets.map(mapMarket),
-      shops:   shops.map(mapShop),
-      garages: garages.map(mapGarage),
-      payments: payments.map(mapPayment),
-      backups: backups.map(mapBackup),
-    };
-  },
+export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
+  // admin and demo share admin's data; regular users get their own isolated set
+  const owner = ctx.role === 'user' ? ctx.username : 'admin';
 
-  // ── Markets ──────────────────────────────────────────────────────────────────
-  async addMarket(data): Promise<Market> {
-    const conn = await db();
-    const id = uid();
-    const today = new Date().toISOString().split('T')[0];
-    await conn.execute(
-      `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [id, data.name, data.phoneNumber, data.monthlyRent, data.address ?? null, today],
-    );
-    return { id, name: data.name, phoneNumber: data.phoneNumber, monthlyRent: data.monthlyRent, address: data.address, createdAt: today };
-  },
+  return {
+    // ── Load all ──────────────────────────────────────────────────────────────
+    async loadAll(): Promise<AllData> {
+      const conn = await db();
+      const [markets, shops, garages, payments, backups] = await Promise.all([
+        conn.select<Row[]>('SELECT * FROM markets  WHERE owner=$1 ORDER BY name',         [owner]),
+        conn.select<Row[]>('SELECT * FROM shops    WHERE owner=$1 ORDER BY shop_name',    [owner]),
+        conn.select<Row[]>('SELECT * FROM garages  WHERE owner=$1 ORDER BY garage_no',    [owner]),
+        conn.select<Row[]>('SELECT * FROM payments WHERE owner=$1 ORDER BY created_at DESC', [owner]),
+        conn.select<Row[]>('SELECT * FROM backups  WHERE owner=$1 ORDER BY created_at DESC', [owner]),
+      ]);
+      return {
+        markets: markets.map(mapMarket),
+        shops:   shops.map(mapShop),
+        garages: garages.map(mapGarage),
+        payments: payments.map(mapPayment),
+        backups: backups.map(mapBackup),
+      };
+    },
 
-  async updateMarket(id, patch): Promise<Market> {
-    const conn = await db();
-    const parts: string[] = [];
-    const vals: unknown[] = [];
-    let i = 1;
-    if (patch.name        !== undefined) { parts.push(`name=$${i++}`);         vals.push(patch.name); }
-    if (patch.phoneNumber !== undefined) { parts.push(`phone_number=$${i++}`); vals.push(patch.phoneNumber); }
-    if (patch.monthlyRent !== undefined) { parts.push(`monthly_rent=$${i++}`); vals.push(patch.monthlyRent); }
-    if (patch.address     !== undefined) { parts.push(`address=$${i++}`);      vals.push(patch.address ?? null); }
-    if (parts.length) {
-      vals.push(id);
-      await conn.execute(`UPDATE markets SET ${parts.join(', ')} WHERE id=$${i}`, vals);
-    }
-    const rows = await conn.select<Row[]>('SELECT * FROM markets WHERE id=$1', [id]);
-    return mapMarket(rows[0]);
-  },
+    // ── Markets ──────────────────────────────────────────────────────────────
+    async addMarket(data): Promise<Market> {
+      const conn = await db();
+      const id = uid();
+      const today = new Date().toISOString().split('T')[0];
+      await conn.execute(
+        `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at, owner)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [id, data.name, data.phoneNumber, data.monthlyRent, data.address ?? null, today, owner],
+      );
+      return { id, name: data.name, phoneNumber: data.phoneNumber, monthlyRent: data.monthlyRent, address: data.address, createdAt: today };
+    },
 
-  async deleteMarket(id): Promise<void> {
-    const conn = await db();
-    await conn.execute('DELETE FROM markets WHERE id=$1', [id]);
-  },
-
-  // ── Shops ────────────────────────────────────────────────────────────────────
-  async addShop(data): Promise<Shop> {
-    const conn = await db();
-    const id = uid();
-    await conn.execute(
-      `INSERT INTO shops
-         (id, market_id, shop_name, tenant_name, phone_number, monthly_rent,
-          paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-      [id, data.marketId, data.shopName, data.tenantName, data.phoneNumber,
-       data.monthlyRent, data.paidRent, data.currentDue, data.dueDate,
-       data.paymentStatus, data.shopType, data.startDate, data.endDate, data.remark ?? null],
-    );
-    return { id, ...data };
-  },
-
-  async updateShop(id, patch): Promise<Shop> {
-    const conn = await db();
-    const map: Record<string, string> = {
-      shopName: 'shop_name', tenantName: 'tenant_name', phoneNumber: 'phone_number',
-      monthlyRent: 'monthly_rent', paidRent: 'paid_rent', currentDue: 'current_due',
-      dueDate: 'due_date', paymentStatus: 'payment_status', shopType: 'shop_type',
-      startDate: 'start_date', endDate: 'end_date', remark: 'remark',
-    };
-    const parts: string[] = [];
-    const vals: unknown[] = [];
-    let i = 1;
-    for (const [key, col] of Object.entries(map)) {
-      if (patch[key as keyof typeof patch] !== undefined) {
-        parts.push(`${col}=$${i++}`);
-        vals.push(patch[key as keyof typeof patch]);
+    async updateMarket(id, patch): Promise<Market> {
+      const conn = await db();
+      const parts: string[] = [];
+      const vals: unknown[] = [];
+      let i = 1;
+      if (patch.name        !== undefined) { parts.push(`name=$${i++}`);         vals.push(patch.name); }
+      if (patch.phoneNumber !== undefined) { parts.push(`phone_number=$${i++}`); vals.push(patch.phoneNumber); }
+      if (patch.monthlyRent !== undefined) { parts.push(`monthly_rent=$${i++}`); vals.push(patch.monthlyRent); }
+      if (patch.address     !== undefined) { parts.push(`address=$${i++}`);      vals.push(patch.address ?? null); }
+      if (parts.length) {
+        vals.push(id, owner);
+        await conn.execute(`UPDATE markets SET ${parts.join(', ')} WHERE id=$${i} AND owner=$${i+1}`, vals);
       }
-    }
-    if (parts.length) {
-      vals.push(id);
-      await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=$${i}`, vals);
-    }
-    const rows = await conn.select<Row[]>('SELECT * FROM shops WHERE id=$1', [id]);
-    return mapShop(rows[0]);
-  },
+      const rows = await conn.select<Row[]>('SELECT * FROM markets WHERE id=$1 AND owner=$2', [id, owner]);
+      return mapMarket(rows[0]);
+    },
 
-  async deleteShop(id): Promise<void> {
-    const conn = await db();
-    await conn.execute('DELETE FROM shops WHERE id=$1', [id]);
-  },
+    async deleteMarket(id): Promise<void> {
+      const conn = await db();
+      await conn.execute('DELETE FROM markets WHERE id=$1 AND owner=$2', [id, owner]);
+      await conn.execute('DELETE FROM shops WHERE market_id=$1 AND owner=$2', [id, owner]);
+    },
 
-  // ── Garages ──────────────────────────────────────────────────────────────────
-  async addGarage(data): Promise<Garage> {
-    const conn = await db();
-    const id = uid();
-    await conn.execute(
-      `INSERT INTO garages
-         (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type,
-          monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type,
-          address, start_date, due_date, remark)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-      [id, data.garageNo, data.ownerName, data.mobileNumber, data.vehicleNumber,
-       data.vehicleType, data.monthlyRent, data.paidRent ?? 0, data.paymentStatus, data.currentDue,
-       data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate, data.dueDate ?? '', data.remark ?? null],
-    );
-    return { id, ...data };
-  },
+    // ── Shops ────────────────────────────────────────────────────────────────
+    async addShop(data): Promise<Shop> {
+      const conn = await db();
+      const id = uid();
+      await conn.execute(
+        `INSERT INTO shops
+           (id, market_id, shop_name, tenant_name, phone_number, monthly_rent,
+            paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        [id, data.marketId, data.shopName, data.tenantName, data.phoneNumber,
+         data.monthlyRent, data.paidRent, data.currentDue, data.dueDate,
+         data.paymentStatus, data.shopType, data.startDate, data.endDate, data.remark ?? null, owner],
+      );
+      return { id, ...data };
+    },
 
-  async updateGarage(id, patch): Promise<Garage> {
-    const conn = await db();
-    const map: Record<string, string> = {
-      ownerName: 'owner_name', mobileNumber: 'mobile_number', vehicleNumber: 'vehicle_number',
-      vehicleType: 'vehicle_type', monthlyRent: 'monthly_rent', paidRent: 'paid_rent',
-      paymentStatus: 'payment_status', currentDue: 'current_due', leaseEndDate: 'lease_end_date',
-      leaseType: 'lease_type', address: 'address', startDate: 'start_date', dueDate: 'due_date',
-      remark: 'remark',
-    };
-    const parts: string[] = [];
-    const vals: unknown[] = [];
-    let i = 1;
-    for (const [key, col] of Object.entries(map)) {
-      if (patch[key as keyof typeof patch] !== undefined) {
-        parts.push(`${col}=$${i++}`);
-        vals.push(patch[key as keyof typeof patch]);
+    async updateShop(id, patch): Promise<Shop> {
+      const conn = await db();
+      const map: Record<string, string> = {
+        shopName: 'shop_name', tenantName: 'tenant_name', phoneNumber: 'phone_number',
+        monthlyRent: 'monthly_rent', paidRent: 'paid_rent', currentDue: 'current_due',
+        dueDate: 'due_date', paymentStatus: 'payment_status', shopType: 'shop_type',
+        startDate: 'start_date', endDate: 'end_date', remark: 'remark',
+      };
+      const parts: string[] = [];
+      const vals: unknown[] = [];
+      let i = 1;
+      for (const [key, col] of Object.entries(map)) {
+        if (patch[key as keyof typeof patch] !== undefined) {
+          parts.push(`${col}=$${i++}`);
+          vals.push(patch[key as keyof typeof patch]);
+        }
       }
-    }
-    if (parts.length) {
-      vals.push(id);
-      await conn.execute(`UPDATE garages SET ${parts.join(', ')} WHERE id=$${i}`, vals);
-    }
-    const rows = await conn.select<Row[]>('SELECT * FROM garages WHERE id=$1', [id]);
-    return mapGarage(rows[0]);
-  },
+      if (parts.length) {
+        vals.push(id, owner);
+        await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=$${i} AND owner=$${i+1}`, vals);
+      }
+      const rows = await conn.select<Row[]>('SELECT * FROM shops WHERE id=$1 AND owner=$2', [id, owner]);
+      return mapShop(rows[0]);
+    },
 
-  async deleteGarage(id): Promise<void> {
-    const conn = await db();
-    await conn.execute('DELETE FROM garages WHERE id=$1', [id]);
-  },
+    async deleteShop(id): Promise<void> {
+      const conn = await db();
+      await conn.execute('DELETE FROM shops WHERE id=$1 AND owner=$2', [id, owner]);
+    },
 
-  // ── Payments ─────────────────────────────────────────────────────────────────
-  async addPayment(data): Promise<Payment> {
-    const conn = await db();
-    const id = uid();
-    await conn.execute(
-      `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, data.date, data.name, data.type, data.amount, data.reference, data.remark ?? null],
-    );
-    return { id, ...data };
-  },
-
-  // ── Backups ───────────────────────────────────────────────────────────────────
-  async addBackup(data): Promise<BackupRecord> {
-    const conn = await db();
-    const id = uid();
-    await conn.execute(
-      `INSERT INTO backups
-         (id, name, description, backup_type, created_at_label, size_label, created_by, snapshot)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [id, data.name, data.description, data.type, data.createdAt, data.size, data.createdBy, data.snapshot ? JSON.stringify(data.snapshot) : null],
-    );
-    return { id, ...data };
-  },
-
-  async deleteBackup(id): Promise<void> {
-    const conn = await db();
-    await conn.execute('DELETE FROM backups WHERE id=$1', [id]);
-  },
-
-  async restoreAll(data): Promise<void> {
-    const conn = await db();
-    await conn.execute('DELETE FROM markets',  []);
-    await conn.execute('DELETE FROM shops',    []);
-    await conn.execute('DELETE FROM garages',  []);
-    await conn.execute('DELETE FROM payments', []);
-    for (const m of data.markets) {
+    // ── Garages ──────────────────────────────────────────────────────────────
+    async addGarage(data): Promise<Garage> {
+      const conn = await db();
+      const id = uid();
       await conn.execute(
-        `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at) VALUES ($1,$2,$3,$4,$5,$6)`,
-        [m.id, m.name, m.phoneNumber, m.monthlyRent, m.address ?? null, m.createdAt],
+        `INSERT INTO garages
+           (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type,
+            monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type,
+            address, start_date, due_date, remark, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+        [id, data.garageNo, data.ownerName, data.mobileNumber, data.vehicleNumber,
+         data.vehicleType, data.monthlyRent, data.paidRent ?? 0, data.paymentStatus, data.currentDue,
+         data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate, data.dueDate ?? '', data.remark ?? null, owner],
       );
-    }
-    for (const s of data.shops) {
+      return { id, ...data };
+    },
+
+    async updateGarage(id, patch): Promise<Garage> {
+      const conn = await db();
+      const map: Record<string, string> = {
+        ownerName: 'owner_name', mobileNumber: 'mobile_number', vehicleNumber: 'vehicle_number',
+        vehicleType: 'vehicle_type', monthlyRent: 'monthly_rent', paidRent: 'paid_rent',
+        paymentStatus: 'payment_status', currentDue: 'current_due', leaseEndDate: 'lease_end_date',
+        leaseType: 'lease_type', address: 'address', startDate: 'start_date', dueDate: 'due_date',
+        remark: 'remark',
+      };
+      const parts: string[] = [];
+      const vals: unknown[] = [];
+      let i = 1;
+      for (const [key, col] of Object.entries(map)) {
+        if (patch[key as keyof typeof patch] !== undefined) {
+          parts.push(`${col}=$${i++}`);
+          vals.push(patch[key as keyof typeof patch]);
+        }
+      }
+      if (parts.length) {
+        vals.push(id, owner);
+        await conn.execute(`UPDATE garages SET ${parts.join(', ')} WHERE id=$${i} AND owner=$${i+1}`, vals);
+      }
+      const rows = await conn.select<Row[]>('SELECT * FROM garages WHERE id=$1 AND owner=$2', [id, owner]);
+      return mapGarage(rows[0]);
+    },
+
+    async deleteGarage(id): Promise<void> {
+      const conn = await db();
+      await conn.execute('DELETE FROM garages WHERE id=$1 AND owner=$2', [id, owner]);
+    },
+
+    // ── Payments ─────────────────────────────────────────────────────────────
+    async addPayment(data): Promise<Payment> {
+      const conn = await db();
+      const id = uid();
       await conn.execute(
-        `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-        [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.remark ?? null],
+        `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark, owner)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [id, data.date, data.name, data.type, data.amount, data.reference, data.remark ?? null, owner],
       );
-    }
-    for (const g of data.garages) {
+      return { id, ...data };
+    },
+
+    // ── Backups ───────────────────────────────────────────────────────────────
+    async addBackup(data): Promise<BackupRecord> {
+      const conn = await db();
+      const id = uid();
       await conn.execute(
-        `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, remark) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-        [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.remark ?? null],
+        `INSERT INTO backups
+           (id, name, description, backup_type, created_at_label, size_label, created_by, snapshot, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [id, data.name, data.description, data.type, data.createdAt, data.size, data.createdBy, data.snapshot ? JSON.stringify(data.snapshot) : null, owner],
       );
-    }
-    for (const p of data.payments) {
-      await conn.execute(
-        `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [p.id, p.date, p.name, p.type, p.amount, p.reference, p.remark ?? null],
-      );
-    }
-  },
-};
+      return { id, ...data };
+    },
+
+    async deleteBackup(id): Promise<void> {
+      const conn = await db();
+      await conn.execute('DELETE FROM backups WHERE id=$1 AND owner=$2', [id, owner]);
+    },
+
+    async restoreAll(data): Promise<void> {
+      const conn = await db();
+      // Only wipe this owner's rows — other users' data stays intact
+      await conn.execute('DELETE FROM markets  WHERE owner=$1', [owner]);
+      await conn.execute('DELETE FROM shops    WHERE owner=$1', [owner]);
+      await conn.execute('DELETE FROM garages  WHERE owner=$1', [owner]);
+      await conn.execute('DELETE FROM payments WHERE owner=$1', [owner]);
+      for (const m of data.markets) {
+        await conn.execute(
+          `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at, owner) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [m.id, m.name, m.phoneNumber, m.monthlyRent, m.address ?? null, m.createdAt, owner],
+        );
+      }
+      for (const s of data.shops) {
+        await conn.execute(
+          `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+          [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.remark ?? null, owner],
+        );
+      }
+      for (const g of data.garages) {
+        await conn.execute(
+          `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+          [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.remark ?? null, owner],
+        );
+      }
+      for (const p of data.payments) {
+        await conn.execute(
+          `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [p.id, p.date, p.name, p.type, p.amount, p.reference, p.remark ?? null, owner],
+        );
+      }
+    },
+  };
+}

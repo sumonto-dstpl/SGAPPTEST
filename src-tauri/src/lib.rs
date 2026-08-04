@@ -20,6 +20,12 @@ pub fn run() {
             sql: include_str!("../migrations/003_add_payment_remark.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "add_owner_column",
+            sql: include_str!("../migrations/004_add_owner_column.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

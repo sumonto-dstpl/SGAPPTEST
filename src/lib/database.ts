@@ -52,8 +52,8 @@ export interface AdapterContext {
 
 export async function createAdapter(ctx: AdapterContext): Promise<DatabaseAdapter> {
   if (isTauriContext()) {
-    const { sqliteAdapter } = await import('./sqlite-adapter');
-    return sqliteAdapter;
+    const { createSqliteAdapter } = await import('./sqlite-adapter');
+    return createSqliteAdapter(ctx);
   }
   const { createLocalAdapter } = await import('./local-adapter');
   return createLocalAdapter(ctx);
