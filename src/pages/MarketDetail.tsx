@@ -309,7 +309,7 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || undefined, });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
