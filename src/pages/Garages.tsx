@@ -109,7 +109,7 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
         {[
           { label: 'Owner Name', key: 'ownerName', placeholder: 'Mr. Roy' },
-          { label: 'Mobile Number', key: 'mobileNumber', placeholder: '9876543210' },
+          { label: 'Mobile Number', key: 'mobileNumber', placeholder: '9876543210',type: 'number' },
           { label: 'Vehicle Number', key: 'vehicleNumber', placeholder: 'WB 02 AB 1234' },
           { label: 'Monthly Rent (₹)', key: 'monthlyRent', placeholder: '5000', type: 'number' },
         ].map(f => (
