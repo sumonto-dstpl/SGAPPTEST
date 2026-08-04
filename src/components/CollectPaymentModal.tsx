@@ -8,13 +8,14 @@ interface Props {
   onClose: () => void;
   title: string;
   currentDue: number;
+  remarks: string;
   onConfirm: (amount: number, remark: string) => Promise<void>;
 }
 
-export default function CollectPaymentModal({ open, onClose, title, currentDue, onConfirm }: Props) {
+export default function CollectPaymentModal({ open, onClose, title, currentDue, remarks, onConfirm }: Props) {
   const { showSnackbar } = useSnackbar();
   const [amount, setAmount] = useState(String(currentDue));
-  const [remark, setRemark] = useState('');
+  const [remark, setRemark] = useState(remarks);
   const [saving, setSaving] = useState(false);
 
   const numericAmount = Number(amount) || 0;
