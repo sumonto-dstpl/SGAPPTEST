@@ -27,6 +27,10 @@ export default function CollectPaymentModal({ open, onClose, title, currentDue, 
 }, [currentDue, remarks]);
 
   const handleConfirm = async () => {
+    if (numericAmount > currentDue) {
+  showSnackbar("Amount cannot exceed current due", "warning");
+  return;
+}
     if (numericAmount <= 0) {
       showSnackbar('Please enter a valid amount', 'warning');
       return;
