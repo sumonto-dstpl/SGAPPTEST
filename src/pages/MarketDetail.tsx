@@ -549,7 +549,7 @@ export default function MarketDetail({ market, onBack }: Props) {
           onClose={() => setCollectShop(null)}
           title={`Collect Payment — ${collectShop.shopName}`}
           currentDue={collectShop.currentDue}
-          remarks={shop.remark}
+          remarks={collectShop.remark ?? ''}
           onConfirm={(amt, rem) => handleCollect(collectShop, amt, rem)}
         />
       )}
