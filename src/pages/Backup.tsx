@@ -126,7 +126,7 @@ export default function Backup() {
         }
       }
 
-      exportExcel(exportMarkets, exportShops, exportGarages, exportPayments, backupName.trim());
+      exportExcel(exportMarkets, exportShops, exportGarages, exportPayments, `${backupName.trim()}.xlsx`);
 
       const sizeKB = (markets.length * 0.5 + shops.length * 0.8 + garages.length * 0.8 + payments.length * 0.3) * 10;
       const size = `${(sizeKB / 100 + 20 + Math.random() * 3).toFixed(1)} MB`;
