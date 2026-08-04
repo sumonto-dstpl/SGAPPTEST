@@ -305,28 +305,37 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
       await conn.execute('DELETE FROM shops    WHERE owner=$1', [owner]);
       await conn.execute('DELETE FROM garages  WHERE owner=$1', [owner]);
       await conn.execute('DELETE FROM payments WHERE owner=$1', [owner]);
+
+      // Regenerate IDs so restored rows never collide with another owner's
+      // existing primary keys in the shared SQLite database.
+      const newId = () => crypto.randomUUID();
+
+      // Build a map from original market IDs to new IDs so shops can reference them
+      const marketIdMap = new Map<string, string>();
       for (const m of data.markets) {
+        const newMid = newId();
+        marketIdMap.set(m.id, newMid);
         await conn.execute(
           `INSERT INTO markets (id, name, phone_number, monthly_rent, address, created_at, owner) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [m.id, m.name, m.phoneNumber, m.monthlyRent, m.address ?? null, m.createdAt, owner],
+          [newMid, m.name, m.phoneNumber, m.monthlyRent, m.address ?? null, m.createdAt, owner],
         );
       }
       for (const s of data.shops) {
         await conn.execute(
           `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-          [s.id, s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.remark ?? null, owner],
+          [newId(), marketIdMap.get(s.marketId) ?? s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.remark ?? null, owner],
         );
       }
       for (const g of data.garages) {
         await conn.execute(
           `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-          [g.id, g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.remark ?? null, owner],
+          [newId(), g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.remark ?? null, owner],
         );
       }
       for (const p of data.payments) {
         await conn.execute(
           `INSERT INTO payments (id, payment_date, name, payment_type, amount, reference, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-          [p.id, p.date, p.name, p.type, p.amount, p.reference, p.remark ?? null, owner],
+          [newId(), p.date, p.name, p.type, p.amount, p.reference, p.remark ?? null, owner],
         );
       }
     },

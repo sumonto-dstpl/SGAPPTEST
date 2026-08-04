@@ -26,6 +26,12 @@ pub fn run() {
             sql: include_str!("../migrations/004_add_owner_column.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "garage_no_per_owner_unique",
+            sql: include_str!("../migrations/005_garage_no_per_owner_unique.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
