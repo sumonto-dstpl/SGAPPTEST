@@ -328,7 +328,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
               {['Paid', 'Due'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
-          <F label="Current Due (₹)" name="currentDue" type="number" />
+          {/* <F label="Current Due (₹)" name="currentDue" type="number" /> */}
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Remark</label>
