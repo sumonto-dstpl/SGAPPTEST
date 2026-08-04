@@ -101,12 +101,12 @@ export default function Dashboard({ onNavigate }: Props) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
             <h2 className="text-base font-semibold text-blue-600">Recent Payments</h2>
-            <button
+            {/* <button
               onClick={() => onNavigate('markets')}
               className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
             >
               View All
-            </button>
+            </button> */}
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -138,12 +138,12 @@ export default function Dashboard({ onNavigate }: Props) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
             <h2 className="text-base font-semibold text-red-500">Pending Dues</h2>
-            <button
+            {/* <button
               onClick={() => onNavigate('markets')}
               className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
             >
               View All
-            </button>
+            </button> */}
           </div>
           <table className="w-full text-sm">
             <thead>
