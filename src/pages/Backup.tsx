@@ -106,7 +106,7 @@ export default function Backup() {
       const label = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                   + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
       const dateStr = now.toISOString().split('T')[0].replace(/-/g, '_');
-      const filename = `PGMS_Backup_${dateStr}.xlsx`;
+      // const filename = `PGMS_Backup_${dateStr}.xlsx`;
 
       // Download Excel — incremental only includes records added since last backup
       let exportMarkets = markets;
@@ -126,7 +126,7 @@ export default function Backup() {
         }
       }
 
-      exportExcel(exportMarkets, exportShops, exportGarages, exportPayments, filename);
+      exportExcel(exportMarkets, exportShops, exportGarages, exportPayments, backupName.trim());
 
       const sizeKB = (markets.length * 0.5 + shops.length * 0.8 + garages.length * 0.8 + payments.length * 0.3) * 10;
       const size = `${(sizeKB / 100 + 20 + Math.random() * 3).toFixed(1)} MB`;
@@ -149,7 +149,7 @@ export default function Backup() {
     try {
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0].replace(/-/g, '_');
-      exportExcel(markets, shops, garages, payments, `PGMS_QuickBackup_${dateStr}.xlsx`);
+      exportExcel(markets, shops, garages, payments, `mullick_fintech_QuickBackup_${dateStr}.xlsx`);
       showSnackbar('Quick backup downloaded as Excel', 'success');
     } catch { showSnackbar('Failed to run backup', 'error'); }
   };
