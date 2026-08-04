@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Banknote, AlertTriangle } from 'lucide-react';
 import Modal from './Modal';
 import { useSnackbar } from '../contexts/SnackbarContext';
@@ -20,6 +20,11 @@ export default function CollectPaymentModal({ open, onClose, title, currentDue, 
 
   const numericAmount = Number(amount) || 0;
   const isPartPayment = numericAmount > 0 && numericAmount < currentDue;
+
+  useEffect(() => {
+  setAmount(String(currentDue));
+  setRemark(remarks ?? '');
+}, [currentDue, remarks]);
 
   const handleConfirm = async () => {
     if (numericAmount <= 0) {
