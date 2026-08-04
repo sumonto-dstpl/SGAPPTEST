@@ -122,16 +122,16 @@ export default function Layout({ children, currentPage, onNavigate }: Props) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+            {/* <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
               <Bell size={18} />
-              {/* <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">5</span> */}
-            </button>
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">5</span>
+            </button> */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg">
               <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-xs font-bold text-blue-600">{(user?.username?.[0] ?? 'A').toUpperCase()}</span>
               </div>
               <span className="text-sm font-medium text-gray-700">{user?.username ?? 'Admin'}</span>
-              <ChevronDown size={14} className="text-gray-400" />
+              {/* <ChevronDown size={14} className="text-gray-400" /> */}
             </div>
           </div>
         </header>
