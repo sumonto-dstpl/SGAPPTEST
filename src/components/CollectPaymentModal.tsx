@@ -15,7 +15,7 @@ interface Props {
 export default function CollectPaymentModal({ open, onClose, title, currentDue, remarks, onConfirm }: Props) {
   const { showSnackbar } = useSnackbar();
   const [amount, setAmount] = useState(String(currentDue));
-  const [remark, setRemark] = useState(String(remarks));
+  const [remark, setRemark] = useState(remarks?? '');
   const [saving, setSaving] = useState(false);
 
   const numericAmount = Number(amount) || 0;
