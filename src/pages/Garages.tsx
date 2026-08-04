@@ -311,7 +311,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
             </select>
           </div>
           <F label="Monthly Rent (₹)" name="monthlyRent" type="number" />
-          <F label="Paid Rent (₹)" name="paidRent" type="number" />
+          {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
             <select value={form.leaseType} onChange={e => set('leaseType', e.target.value)}
