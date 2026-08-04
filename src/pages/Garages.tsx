@@ -269,7 +269,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
         leaseEndDate: form.leaseEndDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
         currentDue: statusChangedToPaid ? garage.currentDue : (Number(form.currentDue) || 0),
-        remark: form.remark.trim() || undefined,
+        remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
         showSnackbar('Garage details saved. Please collect the payment.', 'info');
@@ -401,14 +401,14 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || undefined, });
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
       type: 'Garage',
       amount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      remark: remark || undefined,
+      remark: remark || "",
     });
     showSnackbar(
       `₹${amount.toLocaleString('en-IN')} collected from ${garage.garageNo}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
