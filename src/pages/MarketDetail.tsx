@@ -196,7 +196,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
         paidRent: Number(form.paidRent) || 0,
         currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
-        remark: form.remark.trim() || undefined,
+        remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
         showSnackbar('Shop details saved. Please collect the payment.', 'info');
@@ -309,14 +309,14 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || undefined, });
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
       type: 'Shop',
       amount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      remark: remark || undefined,
+      remark: remark || "",
     });
     showSnackbar(
       `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
