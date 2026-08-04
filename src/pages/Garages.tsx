@@ -370,7 +370,7 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || undefined, });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
