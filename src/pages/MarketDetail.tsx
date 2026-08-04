@@ -241,7 +241,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             <option value="Paid">Paid</option>
           </select>
         </div>
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
           <input
             type="number"
@@ -249,7 +249,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             onChange={e => set('currentDue', e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
-        </div>
+        </div> */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
           <textarea
