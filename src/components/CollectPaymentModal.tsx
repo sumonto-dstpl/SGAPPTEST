@@ -8,7 +8,7 @@ interface Props {
   onClose: () => void;
   title: string;
   currentDue: number;
-  remarks: string;
+  remarks?: string;
   onConfirm: (amount: number, remark: string) => Promise<void>;
 }
 
