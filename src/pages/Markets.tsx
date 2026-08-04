@@ -35,7 +35,7 @@ function AddMarketModal({ open, onClose }: { open: boolean; onClose: () => void 
         {[
           { label: 'Market Name', key: 'name', placeholder: 'e.g. Market A' },
           { label: 'Phone Number', key: 'phoneNumber', placeholder: '9876543210' },
-          { label: 'Monthly Rent (₹)', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          // { label: 'Monthly Rent (₹)', key: 'monthlyRent', placeholder: '5000', type: 'number' },
           { label: 'Address (Optional)', key: 'address', placeholder: '12 Main Street' },
         ].map(f => (
           <div key={f.key}>
@@ -80,7 +80,7 @@ function EditMarketModal({ market, onClose }: { market: Market; onClose: () => v
         {[
           { label: 'Market Name', key: 'name' },
           { label: 'Phone Number', key: 'phoneNumber' },
-          { label: 'Monthly Rent (₹)', key: 'monthlyRent', type: 'number' },
+          // { label: 'Monthly Rent (₹)', key: 'monthlyRent', type: 'number' },
           { label: 'Address', key: 'address' },
         ].map(f => (
           <div key={f.key}>
@@ -209,7 +209,7 @@ export default function Markets({ onViewMarket }: Props) {
             <tr className="bg-gray-50 border-b border-gray-100">
               <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Market Name</th>
               <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone Number</th>
-              <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Monthly Rent (₹)</th>
+              {/* <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Monthly Rent (₹)</th> */}
               <th className="px-5 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</th>
             </tr>
           </thead>
@@ -222,7 +222,7 @@ export default function Markets({ onViewMarket }: Props) {
               >
                 <td className="px-5 py-4 font-semibold text-gray-800">{market.name}</td>
                 <td className="px-5 py-4 text-gray-600">{market.phoneNumber}</td>
-                <td className="px-5 py-4 text-gray-700">₹ {market.monthlyRent.toLocaleString('en-IN')}</td>
+                {/* <td className="px-5 py-4 text-gray-700">₹ {market.monthlyRent.toLocaleString('en-IN')}</td> */}
                 <td className="px-5 py-4" >
                   <div className="flex items-center justify-end gap-2">
                     {/* <button
