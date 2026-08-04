@@ -572,7 +572,7 @@ export default function Garages() {
           onClose={() => setCollectGarage(null)}
           title={`Collect Payment — ${collectGarage.garageNo}`}
           currentDue={collectGarage.currentDue}
-          remarks={garage.remark}
+          remarks={collectGarage.remark ?? ''}
           onConfirm={(amt, rem) => handleCollect(collectGarage, amt, rem)}
         />
       )}
