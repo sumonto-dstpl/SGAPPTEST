@@ -298,11 +298,11 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
   label: string;
   name: string;
   type?: string;
-  // value: string;
-  // onChange: (value: string) => void;
+  value: string;
+  onChange: (value: string) => void;
 }
 
-function Field({ label, name, type = "text" }: FieldProps) {
+function Field({ label, name, type = "text", value, onChange }: FieldProps) {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -311,8 +311,8 @@ function Field({ label, name, type = "text" }: FieldProps) {
 
       <input
         type={type}
-        value={(form as Record<string, string>)[name]}
-        onChange={e => set(name, e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
       />
     </div>
@@ -323,10 +323,14 @@ function Field({ label, name, type = "text" }: FieldProps) {
     <Modal open={true} onClose={onClose} title={`Edit — ${garage.garageNo}`} width="max-w-xl">
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Garage No. *" name="garageNo" />
-          <Field label="Owner Name *" name="ownerName" />
-          <Field label="Mobile Number" name="mobileNumber" />
-          <Field label="Vehicle Number" name="vehicleNumber" />
+          <Field label="Garage No. *" name="garageNo" value={form.garageNo}
+  onChange={(value) => set("garageNo", value)}/>
+          <Field label="Owner Name *" name="ownerName" value={form.ownerName}
+  onChange={(value) => set("ownerName", value)}/>
+          <Field label="Mobile Number" name="mobileNumber" type="number" value={form.mobileNumber}
+  onChange={(value) => set("mobileNumber", value)}/>
+          <Field label="Vehicle Number" name="vehicleNumber" value={form.vehicleNumber}
+  onChange={(value) => set("vehicleNumber", value)}/>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Vehicle Type</label>
             <select value={form.vehicleType} onChange={e => set('vehicleType', e.target.value)}
@@ -334,7 +338,8 @@ function Field({ label, name, type = "text" }: FieldProps) {
               {['Two Wheeler', 'Four Wheeler', 'Truck', 'Bus', 'Other'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
-          <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" />
+          <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" value={form.monthlyRent}
+  onChange={(value) => set("monthlyRent", value)}/>
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
@@ -343,8 +348,10 @@ function Field({ label, name, type = "text" }: FieldProps) {
               {['Monthly', 'Quarterly', 'Annual'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
-          <Field label="Start Date" name="startDate" type="date" />
-          <Field label="Lease End Date" name="leaseEndDate" type="date" />
+          <Field label="Start Date" name="startDate" type="date" value={form.startDate}
+  onChange={(value) => set("startDate", value)}/>
+          <Field label="Lease End Date" name="leaseEndDate" type="date" value={form.leaseEndDate}
+  onChange={(value) => set("leaseEndDate", value)}/>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
             <select value={form.paymentStatus} onChange={e => set('paymentStatus', e.target.value)}
