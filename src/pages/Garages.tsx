@@ -283,9 +283,32 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     setSaving(false);
   };
 
-  const F = ({ label, name, type = 'text' }: { label: string; name: string; type?: string }) => (
+  // const F = ({ label, name, type = 'text' }: { label: string; name: string; type?: string }) => (
+  //   <div>
+  //     <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+  //     <input
+  //       type={type}
+  //       value={(form as Record<string, string>)[name]}
+  //       onChange={e => set(name, e.target.value)}
+  //       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+  //     />
+  //   </div>
+  // );
+  interface FieldProps {
+  label: string;
+  name: string;
+  type?: string;
+  // value: string;
+  // onChange: (value: string) => void;
+}
+
+function Field({ label, name, type = "text" }: FieldProps) {
+  return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-gray-600 mb-1">
+        {label}
+      </label>
+
       <input
         type={type}
         value={(form as Record<string, string>)[name]}
@@ -294,15 +317,16 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
       />
     </div>
   );
+}
 
   return (
     <Modal open={true} onClose={onClose} title={`Edit — ${garage.garageNo}`} width="max-w-xl">
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <F label="Garage No. *" name="garageNo" />
-          <F label="Owner Name *" name="ownerName" />
-          <F label="Mobile Number" name="mobileNumber" />
-          <F label="Vehicle Number" name="vehicleNumber" />
+          <Field label="Garage No. *" name="garageNo" />
+          <Field label="Owner Name *" name="ownerName" />
+          <Field label="Mobile Number" name="mobileNumber" />
+          <Field label="Vehicle Number" name="vehicleNumber" />
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Vehicle Type</label>
             <select value={form.vehicleType} onChange={e => set('vehicleType', e.target.value)}
@@ -310,7 +334,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
               {['Two Wheeler', 'Four Wheeler', 'Truck', 'Bus', 'Other'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
-          <F label="Monthly Rent (₹)" name="monthlyRent" type="number" />
+          <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" />
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
@@ -319,8 +343,8 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
               {['Monthly', 'Quarterly', 'Annual'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
-          <F label="Start Date" name="startDate" type="date" />
-          <F label="Lease End Date" name="leaseEndDate" type="date" />
+          <Field label="Start Date" name="startDate" type="date" />
+          <Field label="Lease End Date" name="leaseEndDate" type="date" />
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
             <select value={form.paymentStatus} onChange={e => set('paymentStatus', e.target.value)}
