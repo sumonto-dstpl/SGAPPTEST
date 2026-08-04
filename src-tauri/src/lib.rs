@@ -1,12 +1,26 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn run() {
-    let migrations = vec![Migration {
-        version: 1,
-        description: "create_initial_schema",
-        sql: include_str!("../migrations/001_initial.sql"),
-        kind: MigrationKind::Up,
-    }];
+    let migrations = vec![
+        Migration {
+            version: 1,
+            description: "create_initial_schema",
+            sql: include_str!("../migrations/001_initial.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add_remarks_paidrent_snapshot",
+            sql: include_str!("../migrations/002_add_remarks_paidrent_snapshot.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "add_payment_remark",
+            sql: include_str!("../migrations/003_add_payment_remark.sql"),
+            kind: MigrationKind::Up,
+        },
+    ];
 
     tauri::Builder::default()
         .plugin(
