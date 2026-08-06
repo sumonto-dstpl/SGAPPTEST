@@ -505,7 +505,7 @@ export default function Garages() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm ">
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
