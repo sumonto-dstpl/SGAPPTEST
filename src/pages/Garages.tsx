@@ -505,7 +505,7 @@ export default function Garages() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm ">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -533,7 +533,7 @@ export default function Garages() {
                   </span>
                 </td>
                 <td className="px-4 py-4 text-gray-600 max-w-[200px] truncate" title={garage.remark || ''}>{garage.remark || '—'}</td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-4 relative">
                   <div className="flex items-center justify-end gap-1">
                     {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
                       <button
@@ -544,13 +544,13 @@ export default function Garages() {
                         Collect
                       </button>
                     )}
-                    <div className="relative">
+                    <div >
                       <button onClick={() => setMenuOpen(menuOpen === garage.id ? null : garage.id)}
                         className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
                         <MoreHorizontal size={16} />
                       </button>
                       {menuOpen === garage.id && (
-                        <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in">
+                        <div className="absolute right-0 bottom-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in">
                           <button onClick={() => { setViewGarage(garage); setMenuOpen(null); }}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                             <Eye size={14} /> View
