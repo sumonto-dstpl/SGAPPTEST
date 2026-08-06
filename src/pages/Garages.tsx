@@ -263,13 +263,13 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
         mobileNumber: form.mobileNumber.trim(),
         vehicleNumber: form.vehicleNumber.trim(),
         vehicleType: form.vehicleType as Garage['vehicleType'],
-        monthlyRent: statusChangedToDue ? Number(garage.monthlyRent) : Number(form.monthlyRent) || 0,
+        monthlyRent: Number(form.monthlyRent) || 0,
         paidRent: Number(form.paidRent) || 0,
         leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate,
         leaseEndDate: form.leaseEndDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
-        currentDue: garage.monthlyRent!=form.monthlyRent ? garage.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.currentDue) || 0),
+        currentDue: statusChangedToPaid ? garage.currentDue : (Number(form.currentDue) || 0),
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
