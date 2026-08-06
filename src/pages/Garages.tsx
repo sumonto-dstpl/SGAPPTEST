@@ -505,7 +505,7 @@ export default function Garages() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative">
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -544,7 +544,7 @@ export default function Garages() {
                         Collect
                       </button>
                     )}
-                    <div className="relative">
+                    <div>
                       <button onClick={() => setMenuOpen(menuOpen === garage.id ? null : garage.id)}
                         className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
                         <MoreHorizontal size={16} />
