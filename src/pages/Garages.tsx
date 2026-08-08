@@ -257,7 +257,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     try {
       const statusChangedToPaid = garage.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       const statusChangedToDue = garage.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(Math.abs(garage.monthlyRent-form.monthlyRent)) + Number(form.currentDue) || 0);
+      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(garage.monthlyRent-form.monthlyRent) + Number(form.currentDue) || 0);
       await updateGarage(garage.id, {
         garageNo: form.garageNo.trim(),
         ownerName: form.ownerName.trim(),
