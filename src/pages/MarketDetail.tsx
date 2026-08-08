@@ -188,13 +188,15 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     setSaving(true);
     try {
       const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
+      const statusChangedToDue = shop.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
+      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent) + Number(form.currentDue) || 0);
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
         phoneNumber: form.phoneNumber,
         monthlyRent: Number(form.monthlyRent),
         paidRent: Number(form.paidRent) || 0,
-        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
+        currentDue: newCurrentDue,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
         remark: form.remark.trim() || "",
       });
