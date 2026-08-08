@@ -244,7 +244,7 @@ export default function Markets({ onViewMarket }: Props) {
                         <MoreHorizontal size={16} />
                       </button>
                       {menuOpen === market.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]">
+                        <div className="absolute right-10 bottom-5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]">
                           <button onClick={() => { setEditMarket(market); setMenuOpen(null); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                             Edit
                           </button>
