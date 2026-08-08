@@ -487,13 +487,13 @@ export default function MarketDetail({ market, onBack }: Props) {
                       >
                         <Pencil size={16} />
                       </button> */}
-                      <div className="relative">
+                      <div >
                         <button onClick={() => setMenuOpen(menuOpen === shop.id ? null : shop.id)}
                           className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
                           <MoreHorizontal size={16} />
                         </button>
                         {menuOpen === shop.id && (
-                          <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
+                          <div className="absolute right-10 bottom-5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
                             <button onClick={() => { setSelected(shop); setMenuOpen(null); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                               <Eye size={14} /> View
