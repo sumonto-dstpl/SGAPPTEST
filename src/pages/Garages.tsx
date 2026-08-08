@@ -354,6 +354,8 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
   onChange={(value) => set("startDate", value)}/>
           <Field label="Lease End Date" name="leaseEndDate" type="date" value={form.leaseEndDate}
   onChange={(value) => set("leaseEndDate", value)}/>
+          <Field label="Paid Rent" name="paidRent" type="number" value={form.paidRent}
+  onChange={(value) => set("paidRent", value)}/>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
             <select value={form.paymentStatus} onChange={e => set('paymentStatus', e.target.value)}
