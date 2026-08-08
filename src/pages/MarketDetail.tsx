@@ -464,7 +464,7 @@ export default function MarketDetail({ market, onBack }: Props) {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-gray-600 max-w-[200px] truncate" title={shop.remark || ''}>{shop.remark || '—'}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5 relative">
                     <div className="flex items-center justify-end gap-1">
                       {shop.paymentStatus === 'Due' && (
                         <button
