@@ -227,7 +227,7 @@ export default function Markets({ onViewMarket }: Props) {
                 <td className="px-5 py-4 font-semibold text-gray-800">{market.name}</td>
                 <td className="px-5 py-4 text-gray-600">{market.phoneNumber}</td>
                 {/* <td className="px-5 py-4 text-gray-700">₹ {market.monthlyRent.toLocaleString('en-IN')}</td> */}
-                <td className="px-5 py-4" >
+                <td className="px-5 py-4 relative" >
                   <div className="flex items-center justify-end gap-2">
                     {/* <button
                       onClick={() => { setEditMarket(market); }}
@@ -236,7 +236,7 @@ export default function Markets({ onViewMarket }: Props) {
                     >
                       <Pencil size={16} />
                     </button> */}
-                    <div className="relative" onClick={e => e.stopPropagation()}>
+                    <div onClick={e => e.stopPropagation()}>
                       <button 
                         onClick={() => setMenuOpen(menuOpen === market.id ? null : market.id)}
                         className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
