@@ -47,7 +47,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
         phoneNumber: form.phoneNumber,
         monthlyRent: Number(form.monthlyRent),
         paidRent: Number(form.paidRent) || 0,
-        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
+        currentDue: newCurrentDue,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
         remark: form.remark.trim() || undefined,
       });
