@@ -3,7 +3,7 @@ import {
   ArrowLeft, Plus, Trash2, RefreshCw, Search, Eye, MoreHorizontal, X, Pencil,
   Store, IndianRupee, Wallet, FileWarning, ChevronLeft, ChevronRight, Banknote
 } from 'lucide-react';
-import { Market, Shop } from '../types';
+import { Market, Shop, Payment } from '../types';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from '../components/Modal';
@@ -353,7 +353,15 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
+    const newPayment: Payment = {
+  amount: amount,
+  paymentDate: new Date().toISOString(),
+  remark: remark || "",
+};
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+    ...(shop.payments || []),
+    newPayment,
+  ], remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
