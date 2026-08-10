@@ -291,6 +291,54 @@ export default function Shops() {
               ))}
             </tbody>
           </table>
+           {menuOpen && (() => {
+  const shop = pageShops.find(s => s.id === menuOpen);
+
+  if (!shop) return null;
+
+  return (
+    <div
+      className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in"
+      style={{
+        top: menuPosition.top,
+        left: menuPosition.left,
+      }}
+    >
+      <button
+        onClick={() => {
+          setSelected(shop);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+      >
+        <Eye size={14} />
+        View
+      </button>
+
+      <button
+        onClick={() => {
+          setEditShop(shop);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+      >
+        <Pencil size={14} />
+        Edit
+      </button>
+
+      <button
+        onClick={() => {
+          handleDelete(shop.id);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+      >
+        <X size={14} />
+        Delete
+      </button>
+    </div>
+  );
+})()}
         </div>
 
         {/* Pagination */}
