@@ -190,11 +190,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const restoreAll = async (data: { markets: Market[]; shops: Shop[]; garages: Garage[]; payments: Payment[] }) => {
-    await (await adapter()).restoreAll({ ...data, backups: [] });
-    setMarkets(data.markets);
-    setShops(data.shops);
-    setGarages(data.garages);
-    setPayments(data.payments);
+    const currentAdapter = await adapter();
+    await currentAdapter.restoreAll({ ...data, backups: [] });
+    const restored = await currentAdapter.loadAll();
+    setMarkets(restored.markets);
+    setShops(restored.shops);
+    setGarages(restored.garages);
+    setPayments(restored.payments);
+    setBackups(restored.backups);
   };
 
   return (

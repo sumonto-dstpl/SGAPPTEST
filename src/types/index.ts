@@ -21,6 +21,8 @@ export interface Shop {
   shopType: 'Rented' | 'Leased';
   startDate: string;
   endDate: string;
+  shopArea?: string;
+  paymentDate?: string;
   remark?: string;
 }
 
@@ -40,6 +42,7 @@ export interface Garage {
   leaseType: 'Monthly' | 'Yearly' | 'Long-term';
   address?: string;
   startDate: string;
+  paymentDate?: string;
   remark?: string;
 }
 

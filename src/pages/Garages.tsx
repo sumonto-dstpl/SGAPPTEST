@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil } from 'lucide-react';
+import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { Garage } from '../types';
 import Modal from '../components/Modal';
@@ -175,7 +175,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
 
   const handlePayment = async () => {
     try {
-      await updateGarage(garage.id, { currentDue: 0, paymentStatus: 'Paid' });
+      await updateGarage(garage.id, { currentDue: 0, paymentStatus: 'Paid', paymentDate: new Date().toISOString() });
       showSnackbar(`Payment marked as Paid for ${garage.garageNo}`, 'success');
       onClose();
     } catch { showSnackbar('Failed to update payment status', 'error'); }
@@ -198,6 +198,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             { label: 'Start Date', value: garage.startDate },
             { label: 'Lease End Date', value: garage.leaseEndDate },
             { label: 'Remark', value: garage.remark || '—' },
+            { label: 'Payment Date', value: garage.paymentDate ? new Date(garage.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—' },
           ].map(f => (
             <div key={f.label}>
               <p className="text-xs text-gray-500 mb-1">{f.label}</p>
@@ -212,6 +213,9 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             </span>
           </div>
         </div>
+        <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <Printer size={16} /> Print Details
+        </button>
         {garage.paymentStatus === 'Due' && (
           <button onClick={handlePayment} className="w-full px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">
             Mark as Paid (₹ {garage.monthlyRent.toLocaleString('en-IN')})
@@ -238,6 +242,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     leaseEndDate: garage.leaseEndDate,
     paymentStatus: garage.paymentStatus,
     currentDue: String(garage.currentDue),
+    paymentDate: garage.paymentDate ?? '',
     remark: garage.remark ?? '',
   });
   const [saving, setSaving] = useState(false);
@@ -271,6 +276,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
         leaseEndDate: form.leaseEndDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
         currentDue: newCurrentDue,
+        paymentDate: form.paymentDate || undefined,
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -364,6 +370,8 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
             </select>
           </div>
           {/* <F label="Current Due (₹)" name="currentDue" type="number" /> */}
+          <Field label="Payment Date" name="paymentDate" type="datetime-local" value={form.paymentDate ? form.paymentDate.slice(0, 16) : ''}
+            onChange={(value) => set('paymentDate', value ? new Date(value).toISOString() : '')}/>
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Remark</label>
@@ -405,7 +413,7 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,

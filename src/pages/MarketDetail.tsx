@@ -28,7 +28,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',
-    dueDate: '', startDate: '', endDate: '',
+    dueDate: '', startDate: '', endDate: '', shopArea: '',
   });
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -76,9 +76,10 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
         phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent),
         paidRent: 0, currentDue: Number(form.monthlyRent), dueDate: form.dueDate,
         paymentStatus: 'Due', shopType, startDate: form.startDate, endDate: form.endDate,
+        shopArea: form.shopArea.trim() || undefined,
       });
       showSnackbar(`${form.shopName} added successfully`, 'success');
-      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '' });
+      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
       onClose();
     } catch { showSnackbar('Failed to add shop', 'error'); }
     finally { setSaving(false); }
@@ -104,6 +105,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
           { label: 'Tenant Name *',      key: 'tenantName',   placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *',     key: 'phoneNumber',  placeholder: '9876543210' },
           { label: rentLabel,            key: 'monthlyRent',  placeholder: shopType === 'Rented' ? '5000' : '60000', type: 'number' },
+          { label: 'Shop Area (sqft)',     key: 'shopArea',     placeholder: 'e.g. 250' },
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -177,6 +179,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     currentDue: String(shop.currentDue),
     endDate: shop.endDate,
     dueDate: shop.dueDate,
+    shopArea: shop.shopArea ?? '',
+    paymentDate: shop.paymentDate ?? '',
     remark: shop.remark ?? '',
   });
 
@@ -202,6 +206,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
         endDate: form.endDate,        
         dueDate: form.dueDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
+        shopArea: form.shopArea.trim() || undefined,
+        paymentDate: form.paymentDate || undefined,
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -224,7 +230,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
-          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },            
+          { label: 'Shop Area (sqft)',     key: 'shopArea',    placeholder: 'e.g. 250' },
+          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -267,8 +274,13 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+          <input type="datetime-local" value={form.paymentDate ? form.paymentDate.slice(0, 16) : ''} onChange={e => set('paymentDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+        </div>
         {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label
           <input
             type="number"
             value={form.currentDue}
@@ -276,6 +288,12 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div> */}
+        {shop.paymentDate && (
+          <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Payment Date</span>
+            <span className="text-sm font-semibold text-gray-800">{new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
           <textarea
@@ -335,7 +353,7 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,

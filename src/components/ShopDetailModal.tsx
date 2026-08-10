@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Shop } from '../types';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from './Modal';
@@ -26,7 +26,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus });
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString() });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
@@ -66,13 +66,22 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="Phone Number"  value={shop.phoneNumber} />
         <Row label="Shop Type"     value={shop.shopType} />
         <Row label="Monthly Rent"  value={`₹${shop.monthlyRent.toLocaleString('en-IN')}`} />
+        <Row label="Shop Area (sqft)" value={shop.shopArea || '—'} />
         <Row label="Paid Rent"     value={`₹${shop.paidRent.toLocaleString('en-IN')}`} />
         <Row label="Current Due"   value={`₹${shop.currentDue.toLocaleString('en-IN')}`} red={shop.currentDue > 0} />
         <Row label="Due Date"      value={fmtDate(shop.dueDate)} />
         <Row label="Start Date"    value={fmtDate(shop.startDate)} />
         <Row label="End Date"      value={fmtDate(shop.endDate)} />
+        <Row label="Payment Date" value={shop.paymentDate ? new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} />
         <Row label="Remark"       value={shop.remark || '—'} />
       </div>
+
+      <button
+        onClick={() => window.print()}
+        className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <Printer size={17} /> Print Details
+      </button>
 
       {shop.paymentStatus === 'Due' && shop.currentDue > 0 && (
         <button
