@@ -250,12 +250,12 @@ const handleMenuClick = (e, marketId) => {
                     </button> */}
                     <div onClick={e => e.stopPropagation()}>
                       <button 
-                        onClick={() => setMenuOpen(menuOpen === market.id ? null : market.id)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
+  onClick={(e) => handleMenuClick(e, market.id)}
+  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+>
                         <MoreHorizontal size={16} />
                       </button>
-                      {menuOpen === market.id && (
+                      {/* {menuOpen === market.id && (
                         <div className="absolute right-10 bottom-5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]">
                           <button onClick={() => { setEditMarket(market); setMenuOpen(null); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                             Edit
@@ -264,7 +264,7 @@ const handleMenuClick = (e, marketId) => {
                             Delete
                           </button>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </td>
