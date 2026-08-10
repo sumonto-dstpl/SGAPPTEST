@@ -41,15 +41,13 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     setSaving(true);
     try {
       const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
-      const statusChangedToDue = shop.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent) + Number(form.currentDue) || 0);
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
         phoneNumber: form.phoneNumber,
         monthlyRent: Number(form.monthlyRent),
         paidRent: Number(form.paidRent) || 0,
-        currentDue: newCurrentDue,
+        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
         remark: form.remark.trim() || undefined,
       });
@@ -134,7 +132,6 @@ export default function Shops() {
   const [page, setPage]           = useState(1);
   const [selected, setSelected]   = useState<Shop | null>(null);
   const [collectShop, setCollectShop] = useState<Shop | null>(null);
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [editShop, setEditShop]   = useState<Shop | null>(null);
 
   const handleCollect = async (shop: Shop, amount: number, remark: string) => {
@@ -175,18 +172,6 @@ export default function Shops() {
   const totalRent  = shops.reduce((s, x) => s + x.monthlyRent, 0);
   const totalPaid  = shops.reduce((s, x) => s + x.paidRent, 0);
   const totalDue   = shops.reduce((s, x) => s + x.currentDue, 0);
-   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-const handleMenuClick = (e, shopId) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-
-  setMenuOpen(menuOpen === shopId ? null : shopId);
-
-  setMenuPosition({
-    top: rect.bottom + 4,
-    left: rect.right - 120,
-  });
-};
 
   return (
     <div className="p-6 space-y-5">
@@ -292,66 +277,18 @@ const handleMenuClick = (e, shopId) => {
                           Collect
                         </button>
                       )}
-                      <button
-      onClick={(e) => handleMenuClick(e, shop.id)}
-      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-    >
-                          <MoreHorizontal size={16} />
-                        </button>
+                      <button onClick={() => setEditShop(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="Edit">
+                        <Pencil size={16} />
+                      </button>
+                      <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="View">
+                        <Eye size={16} />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-           {menuOpen && (() => {
-  const shop = pageShops.find(s => s.id === menuOpen);
-
-  if (!shop) return null;
-
-  return (
-    <div
-      className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in"
-      style={{
-        top: menuPosition.top,
-        left: menuPosition.left,
-      }}
-    >
-      <button
-        onClick={() => {
-          setSelected(shop);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-      >
-        <Eye size={14} />
-        View
-      </button>
-
-      <button
-        onClick={() => {
-          setEditShop(shop);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-      >
-        <Pencil size={14} />
-        Edit
-      </button>
-
-      <button
-        onClick={() => {
-          handleDelete(shop.id);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-      >
-        <X size={14} />
-        Delete
-      </button>
-    </div>
-  );
-})()}
         </div>
 
         {/* Pagination */}

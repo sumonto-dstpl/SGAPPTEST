@@ -145,18 +145,6 @@ export default function Markets({ onViewMarket }: Props) {
       setSelected([]);
     } catch { showSnackbar('Failed to delete some markets', 'error'); }
   };
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-const handleMenuClick = (e, marketId) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-
-  setMenuPosition({
-    top: rect.bottom + 4,
-    left: rect.right - 140,
-  });
-
-  setMenuOpen(menuOpen === marketId ? null : marketId);
-};
 
   return (
     <div className="p-6 space-y-6">
@@ -239,7 +227,7 @@ const handleMenuClick = (e, marketId) => {
                 <td className="px-5 py-4 font-semibold text-gray-800">{market.name}</td>
                 <td className="px-5 py-4 text-gray-600">{market.phoneNumber}</td>
                 {/* <td className="px-5 py-4 text-gray-700">₹ {market.monthlyRent.toLocaleString('en-IN')}</td> */}
-                <td className="px-5 py-4 relative" >
+                <td className="px-5 py-4" >
                   <div className="flex items-center justify-end gap-2">
                     {/* <button
                       onClick={() => { setEditMarket(market); }}
@@ -248,15 +236,15 @@ const handleMenuClick = (e, marketId) => {
                     >
                       <Pencil size={16} />
                     </button> */}
-                    <div onClick={e => e.stopPropagation()}>
+                    <div className="relative" onClick={e => e.stopPropagation()}>
                       <button 
-  onClick={(e) => handleMenuClick(e, market.id)}
-  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
->
+                        onClick={() => setMenuOpen(menuOpen === market.id ? null : market.id)}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <MoreHorizontal size={16} />
                       </button>
-                      {/* {menuOpen === market.id && (
-                        <div className="absolute right-10 bottom-5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]">
+                      {menuOpen === market.id && (
+                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]">
                           <button onClick={() => { setEditMarket(market); setMenuOpen(null); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                             Edit
                           </button>
@@ -264,7 +252,7 @@ const handleMenuClick = (e, marketId) => {
                             Delete
                           </button>
                         </div>
-                      )} */}
+                      )}
                     </div>
                   </div>
                 </td>
@@ -275,40 +263,6 @@ const handleMenuClick = (e, marketId) => {
             )}
           </tbody>
         </table>
-          {menuOpen && (() => {
-  const market = paginated.find(m => m.id === menuOpen);
-  if (!market) return null;
-
-  return (
-    <div
-      className="fixed bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden min-w-[140px]"
-      style={{
-        top: menuPosition.top,
-        left: menuPosition.left,
-      }}
-    >
-      <button
-        onClick={() => {
-          setEditMarket(market);
-          setMenuOpen(null);
-        }}
-        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-      >
-        Edit
-      </button>
-
-      <button
-        onClick={() => {
-          handleDelete(market.id);
-          setMenuOpen(null);
-        }}
-        className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-      >
-        Delete
-      </button>
-    </div>
-  );
-})()}
         </div>
 
         {/* Pagination */}
