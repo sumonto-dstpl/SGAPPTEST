@@ -47,7 +47,7 @@ export interface Garage {
   leaseType: 'Monthly' | 'Yearly' | 'Long-term';
   address?: string;
   startDate: string;
-  paymentDate?: string;
+  payments: Payment[];
   remark?: string;
 }
 
