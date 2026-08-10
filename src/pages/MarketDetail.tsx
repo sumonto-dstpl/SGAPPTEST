@@ -345,10 +345,10 @@ export default function MarketDetail({ market, onBack }: Props) {
   };
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
-const handleMenuClick = (e, garageId) => {
+const handleMenuClick = (e, shopId) => {
   const rect = e.currentTarget.getBoundingClientRect();
 
-  setMenuOpen(menuOpen === garageId ? null : garageId);
+  setMenuOpen(menuOpen === shopId ? null : shopId);
 
   setMenuPosition({
     top: rect.bottom + 4,
@@ -500,11 +500,13 @@ const handleMenuClick = (e, garageId) => {
                         <Pencil size={16} />
                       </button> */}
                       <div >
-                        <button onClick={() => setMenuOpen(menuOpen === shop.id ? null : shop.id)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
+                       <button
+      onClick={(e) => handleMenuClick(e, shop.id)}
+      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+    >
                           <MoreHorizontal size={16} />
                         </button>
-                        {menuOpen === shop.id && (
+                        {/* {menuOpen === shop.id && (
                           <div className="absolute right-10 bottom-5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
                             <button onClick={() => { setSelected(shop); setMenuOpen(null); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
@@ -519,7 +521,7 @@ const handleMenuClick = (e, garageId) => {
                               <X size={14} /> Delete
                             </button>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </td>
@@ -527,6 +529,54 @@ const handleMenuClick = (e, garageId) => {
               ))}
             </tbody>
           </table>
+          {menuOpen && (() => {
+  const shop = pageShops.find(s => s.id === menuOpen);
+
+  if (!shop) return null;
+
+  return (
+    <div
+      className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in"
+      style={{
+        top: menuPosition.top,
+        left: menuPosition.left,
+      }}
+    >
+      <button
+        onClick={() => {
+          setSelected(shop);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+      >
+        <Eye size={14} />
+        View
+      </button>
+
+      <button
+        onClick={() => {
+          setEditShop(shop);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+      >
+        <Pencil size={14} />
+        Edit
+      </button>
+
+      <button
+        onClick={() => {
+          handleDelete(shop.id);
+          setMenuOpen(null);
+        }}
+        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+      >
+        <X size={14} />
+        Delete
+      </button>
+    </div>
+  );
+})()}
         </div>
 
         {/* Pagination */}
