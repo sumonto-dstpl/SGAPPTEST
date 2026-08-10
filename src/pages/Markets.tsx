@@ -275,6 +275,40 @@ const handleMenuClick = (e, marketId) => {
             )}
           </tbody>
         </table>
+          {menuOpen && (() => {
+  const market = paginated.find(m => m.id === menuOpen);
+  if (!market) return null;
+
+  return (
+    <div
+      className="fixed bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden min-w-[140px]"
+      style={{
+        top: menuPosition.top,
+        left: menuPosition.left,
+      }}
+    >
+      <button
+        onClick={() => {
+          setEditMarket(market);
+          setMenuOpen(null);
+        }}
+        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+      >
+        Edit
+      </button>
+
+      <button
+        onClick={() => {
+          handleDelete(market.id);
+          setMenuOpen(null);
+        }}
+        className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+      >
+        Delete
+      </button>
+    </div>
+  );
+})()}
         </div>
 
         {/* Pagination */}
