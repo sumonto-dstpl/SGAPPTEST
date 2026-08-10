@@ -8,6 +8,45 @@ import { useSnackbar } from '../contexts/SnackbarContext';
 
 const ITEMS_PER_PAGE = 10;
 
+function PaymentRows({ payments }: { payments?: Payment[] }) {
+  return (
+    <>
+       <div className="grid grid-cols-3 gap-4 px-3 py-2 font-semibold bg-gray-100">
+  <span>Amount</span>
+  <span>Payment Date</span>
+  <span>Remark</span>
+</div>
+      {payments?.length ? (
+        payments.map((payment, index) => (
+          <div
+            key={index}
+            className="grid grid-cols-3 gap-4 px-3 py-2 border-b"
+          >
+            <span>
+              ₹{payment.amount.toLocaleString('en-IN')}
+            </span>
+
+            <span>
+              {new Date(payment.paymentDate).toLocaleString('en-GB', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </span>
+
+            <span>
+              {payment.remark || '—'}
+            </span>
+          </div>
+        ))
+      ) : (
+        <div className="px-3 py-2 text-gray-500">
+          No payments
+        </div>
+      )}
+    </>
+  );
+}
+
 function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { garages, addGarage } = useData();
   const { showSnackbar } = useSnackbar();
@@ -197,8 +236,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             { label: 'Lease Type', value: garage.leaseType },
             { label: 'Start Date', value: garage.startDate },
             { label: 'Lease End Date', value: garage.leaseEndDate },
-            { label: 'Remark', value: garage.remark || '—' },
-            { label: 'Payment Date', value: garage.paymentDate ? new Date(garage.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—' },
+            { label: 'Remark', value: garage.remark || '—' },           
           ].map(f => (
             <div key={f.label}>
               <p className="text-xs text-gray-500 mb-1">{f.label}</p>
@@ -212,6 +250,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
               {garage.paymentStatus}
             </span>
           </div>
+          
         </div>
         <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
           <Printer size={16} /> Print Details
