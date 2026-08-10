@@ -147,15 +147,15 @@ export default function Markets({ onViewMarket }: Props) {
   };
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
-const handleMenuClick = (e, garageId) => {
+const handleMenuClick = (e, marketId) => {
   const rect = e.currentTarget.getBoundingClientRect();
-
-  setMenuOpen(menuOpen === garageId ? null : garageId);
 
   setMenuPosition({
     top: rect.bottom + 4,
-    left: rect.right - 120,
+    left: rect.right - 140,
   });
+
+  setMenuOpen(menuOpen === marketId ? null : marketId);
 };
 
   return (
