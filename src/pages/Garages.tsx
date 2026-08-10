@@ -216,11 +216,11 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
         <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
           <Printer size={16} /> Print Details
         </button>
-        {garage.paymentStatus === 'Due' && (
+        {/* {garage.paymentStatus === 'Due' && (
           <button onClick={handlePayment} className="w-full px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">
             Mark as Paid (₹ {garage.monthlyRent.toLocaleString('en-IN')})
           </button>
-        )}
+        )} */}
       </div>
     </Modal>
   );
