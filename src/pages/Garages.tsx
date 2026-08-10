@@ -443,7 +443,7 @@ export default function Garages() {
     setMenuOpen(null);
   };
 
-  const [menuOpen, setMenuOpen] = useState(null);
+  // const [menuOpen, setMenuOpen] = useState(null);
 const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
 const handleMenuClick = (e, garageId) => {
