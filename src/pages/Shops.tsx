@@ -174,6 +174,18 @@ export default function Shops() {
   const totalRent  = shops.reduce((s, x) => s + x.monthlyRent, 0);
   const totalPaid  = shops.reduce((s, x) => s + x.paidRent, 0);
   const totalDue   = shops.reduce((s, x) => s + x.currentDue, 0);
+   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+const handleMenuClick = (e, shopId) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+
+  setMenuOpen(menuOpen === shopId ? null : shopId);
+
+  setMenuPosition({
+    top: rect.bottom + 4,
+    left: rect.right - 120,
+  });
+};
 
   return (
     <div className="p-6 space-y-5">
