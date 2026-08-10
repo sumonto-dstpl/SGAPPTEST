@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shop } from '../types';
+import { Shop,Payment } from '../types';
 import { CheckCircle, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
