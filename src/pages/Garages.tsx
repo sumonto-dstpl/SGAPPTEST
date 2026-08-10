@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
-import { Garage } from '../types';
+import { Garage, Payment } from '../types';
 import Modal from '../components/Modal';
 import CollectPaymentModal from '../components/CollectPaymentModal';
 import { useSnackbar } from '../contexts/SnackbarContext';
@@ -250,7 +250,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
               {garage.paymentStatus}
             </span>
           </div>
-          
+          <PaymentRows payments={garage.payments} />
         </div>
         <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
           <Printer size={16} /> Print Details
