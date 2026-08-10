@@ -16,6 +16,44 @@ function Row({ label, value, red }: { label: string; value: string | number; red
     </div>
   );
 }
+function PaymentRows({ payments }: { payments?: Payment[] }) {
+  return (
+    <>
+       <div className="grid grid-cols-3 gap-4 px-3 py-2 font-semibold bg-gray-100">
+  <span>Amount</span>
+  <span>Payment Date</span>
+  <span>Remark</span>
+</div>
+      {payments?.length ? (
+        payments.map((payment, index) => (
+          <div
+            key={index}
+            className="grid grid-cols-3 gap-4 px-3 py-2 border-b"
+          >
+            <span>
+              ₹{payment.amount.toLocaleString('en-IN')}
+            </span>
+
+            <span>
+              {new Date(payment.paymentDate).toLocaleString('en-GB', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </span>
+
+            <span>
+              {payment.remark || '—'}
+            </span>
+          </div>
+        ))
+      ) : (
+        <div className="px-3 py-2 text-gray-500">
+          No payments
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function ShopDetailModal({ shop, onClose }: Props) {
   const { updateShop, addPayment } = useData();
@@ -80,9 +118,12 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="Current Due"   value={`₹${shop.currentDue.toLocaleString('en-IN')}`} red={shop.currentDue > 0} />
         <Row label="Due Date"      value={fmtDate(shop.dueDate)} />
         <Row label="Start Date"    value={fmtDate(shop.startDate)} />
-        <Row label="End Date"      value={fmtDate(shop.endDate)} />
-        <Row label="Payment Date" value={shop.paymentDate ? new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} />
+        <Row label="End Date"      value={fmtDate(shop.endDate)} />        
         <Row label="Remark"       value={shop.remark || '—'} />
+      
+
+<PaymentRows payments={shop.payments} />
+        <Row label="Payment Date" value={shop.paymentDate ? new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} />
       </div>
 
       <button
