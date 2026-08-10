@@ -361,7 +361,7 @@ export default function MarketDetail({ market, onBack }: Props) {
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
     newPayment,
-  ], remark: remark || "", });
+  ], remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
