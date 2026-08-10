@@ -180,7 +180,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     endDate: shop.endDate,
     dueDate: shop.dueDate,
     shopArea: shop.shopArea ?? '',
-    paymentDate: shop.paymentDate ?? '',
+    // paymentDate: shop.paymentDate ?? '',
     remark: shop.remark ?? '',
   });
 
@@ -207,7 +207,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
         dueDate: form.dueDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
         shopArea: form.shopArea.trim() || undefined,
-        paymentDate: form.paymentDate || undefined,
+        // paymentDate: form.paymentDate || undefined,
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -274,11 +274,11 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div>
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
           <input type="datetime-local" value={form.paymentDate ? form.paymentDate.slice(0, 16) : ''} onChange={e => set('paymentDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
-        </div>
+        </div> */}
         {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label
           <input
@@ -288,12 +288,12 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div> */}
-        {shop.paymentDate && (
+        {/* {shop.paymentDate && (
           <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Payment Date</span>
             <span className="text-sm font-semibold text-gray-800">{new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
           </div>
-        )}
+        )} */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
           <textarea
