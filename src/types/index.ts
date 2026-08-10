@@ -6,7 +6,7 @@ export interface Market {
   address?: string;
   createdAt: string;
 }
-export interface Payment {
+export interface PaymentDate {
   amount: number;
   paymentDate: string;
   remark?: string;
@@ -27,7 +27,7 @@ export interface Shop {
   startDate: string;
   endDate: string;
   shopArea?: string;
-   payments: Payment[];
+   payments: PaymentDate[];
   remark?: string;
 }
 
@@ -47,7 +47,7 @@ export interface Garage {
   leaseType: 'Monthly' | 'Yearly' | 'Long-term';
   address?: string;
   startDate: string;
-  payments: Payment[];
+  payments: PaymentDate[];
   remark?: string;
 }
 

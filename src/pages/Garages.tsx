@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
-import { Garage, Payment } from '../types';
+import { Garage, PaymentDate } from '../types';
 import Modal from '../components/Modal';
 import CollectPaymentModal from '../components/CollectPaymentModal';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
 const ITEMS_PER_PAGE = 10;
 
-function PaymentRows({ payments }: { payments?: Payment[] }) {
+function PaymentRows({ payments }: { payments?: PaymentDate[] }) {
   return (
     <>
        <div className="grid grid-cols-3 gap-4 px-3 py-2 font-semibold bg-gray-100">
@@ -453,7 +453,7 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-     const newPayment: Payment = {
+     const newPayment: PaymentDate = {
   amount: amount,
   paymentDate: new Date().toISOString(),
  remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",

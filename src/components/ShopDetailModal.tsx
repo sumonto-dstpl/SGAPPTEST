@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shop,Payment } from '../types';
+import { Shop,PaymentDate } from '../types';
 import { CheckCircle, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
@@ -16,7 +16,7 @@ function Row({ label, value, red }: { label: string; value: string | number; red
     </div>
   );
 }
-function PaymentRows({ payments }: { payments?: Payment[] }) {
+function PaymentRows({ payments }: { payments?: PaymentDate[] }) {
   return (
     <>
        <div className="grid grid-cols-3 gap-4 px-3 py-2 font-semibold bg-gray-100">
@@ -64,7 +64,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-      const newPayment: Payment = {
+      const newPayment: PaymentDate = {
   amount: amount,
   paymentDate: new Date().toISOString(),
  remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",

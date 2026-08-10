@@ -3,7 +3,7 @@ import {
   ArrowLeft, Plus, Trash2, RefreshCw, Search, Eye, MoreHorizontal, X, Pencil,
   Store, IndianRupee, Wallet, FileWarning, ChevronLeft, ChevronRight, Banknote
 } from 'lucide-react';
-import { Market, Shop, Payment } from '../types';
+import { Market, Shop, PaymentDate } from '../types';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from '../components/Modal';
@@ -353,7 +353,7 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    const newPayment: Payment = {
+    const newPayment: PaymentDate = {
   amount: amount,
   paymentDate: new Date().toISOString(),
   remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",
