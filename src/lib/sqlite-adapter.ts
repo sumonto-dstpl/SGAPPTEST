@@ -207,13 +207,13 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
       let i = 1;
       for (const [key, col] of Object.entries(map)) {
         if (patch[key as keyof typeof patch] !== undefined) {
-          parts.push(`${col}=${i++}`);
+          parts.push(`${col}=$${i++}`);
           vals.push(patch[key as keyof typeof patch]);
         }
       }
       if (parts.length) {
         vals.push(id, owner);
-        await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=${i} AND owner=${i+1}`, vals);
+        await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=$${i} AND owner=$${i+1}`, vals);
       }
       const rows = await conn.select<Row[]>('SELECT * FROM shops WHERE id=$1 AND owner=$2', [id, owner]);
       return mapShop(rows[0]);
