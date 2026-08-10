@@ -123,7 +123,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
       
 
 <PaymentRows payments={shop.payments} />
-        <Row label="Payment Date" value={shop.paymentDate ? new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} />
+        {/* <Row label="Payment Date" value={shop.paymentDate ? new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'} /> */}
       </div>
 
       <button
