@@ -343,6 +343,18 @@ export default function MarketDetail({ market, onBack }: Props) {
     await refresh();
     showSnackbar('Data refreshed', 'success');
   };
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+const handleMenuClick = (e, garageId) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+
+  setMenuOpen(menuOpen === garageId ? null : garageId);
+
+  setMenuPosition({
+    top: rect.bottom + 4,
+    left: rect.right - 120,
+  });
+};
 
   return (
     <div className="p-6 space-y-5">
