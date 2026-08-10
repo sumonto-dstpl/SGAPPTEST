@@ -26,7 +26,16 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString() });
+      const newPayment: Payment = {
+  amount: amount,
+  paymentDate: new Date().toISOString(),
+  remark: remark || "",
+};
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+    ...(shop.payments || []),
+    newPayment,
+  ], remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid", });
+    // await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString() });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
