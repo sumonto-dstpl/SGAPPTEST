@@ -175,6 +175,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     paidRent: String(shop.paidRent),
     paymentStatus: shop.paymentStatus,
     currentDue: String(shop.currentDue),
+    endDate: shop.endDate,
+    dueDate: shop.dueDate,
     remark: shop.remark ?? '',
   });
 
@@ -197,6 +199,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
         monthlyRent: Number(form.monthlyRent),
         paidRent: Number(form.paidRent) || 0,
         currentDue: newCurrentDue,
+        endDate: form.endDate,        
+        dueDate: form.dueDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
         remark: form.remark.trim() || "",
       });
@@ -220,7 +224,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
-          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
+          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },            
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -242,6 +246,26 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             <option value="Due">Due</option>
             <option value="Paid">Paid</option>
           </select>
+        </div>
+         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <input
+            type="date"
+            value={form.endDate}
+             onChange={e => set('endDate', e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          />
+        </div>
+
+        {/* Due Date - auto-filled, read-only */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+          <input
+            type="date"
+            value={form.dueDate}
+             onChange={e => set('dueDate', e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+          />
         </div>
         {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
