@@ -191,10 +191,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const restoreAll = async (data: { markets: Market[]; shops: Shop[]; garages: Garage[]; payments: Payment[] }) => {
     await (await adapter()).restoreAll({ ...data, backups: [] });
-    setMarkets(data.markets);
-    setShops(data.shops);
-    setGarages(data.garages);
-    setPayments(data.payments);
+    await loadAll();
   };
 
   return (

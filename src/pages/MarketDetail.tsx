@@ -28,32 +28,32 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',
-    dueDate: '', startDate: '', endDate: '',
+    dueDate: '', startDate: '', endDate: '', shopArea: '',
   });
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   // Autofill end date and due date based on start date
-  // useEffect(() => {
-  //   if (form.startDate) {
-  //     const startDate = new Date(form.startDate);
-  //     let endDate: Date;
-  //     let dueDate: Date;
+  useEffect(() => {
+    if (form.startDate) {
+      const startDate = new Date(form.startDate);
+      let endDate: Date;
+      let dueDate: Date;
 
-  //     if (shopType === 'Rented') {
-  //       // Monthly: end date = one day before same date next month, due date = same date next month
-  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
-  //     } else {
-  //       // Yearly: end date = one day before same date next year, due date = same date next year
-  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
-  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
-  //     }
+      if (shopType === 'Rented') {
+        // Monthly: end date = one day before same date next month, due date = same date next month
+        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
+      } else {
+        // Yearly: end date = one day before same date next year, due date = same date next year
+        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
+        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
+      }
 
-  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
-  //     setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
-  //   }
-  // }, [form.startDate, shopType]);
+      const formatDate = (d: Date) => d.toISOString().split('T')[0];
+      setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+    }
+  }, [form.startDate, shopType]);
 
   // Reset dates when shop type changes
   useEffect(() => {
@@ -76,9 +76,10 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
         phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent),
         paidRent: 0, currentDue: Number(form.monthlyRent), dueDate: form.dueDate,
         paymentStatus: 'Due', shopType, startDate: form.startDate, endDate: form.endDate,
+        shopArea: form.shopArea.trim() || undefined,
       });
       showSnackbar(`${form.shopName} added successfully`, 'success');
-      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '' });
+      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
       onClose();
     } catch { showSnackbar('Failed to add shop', 'error'); }
     finally { setSaving(false); }
@@ -104,6 +105,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
           { label: 'Tenant Name *',      key: 'tenantName',   placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *',     key: 'phoneNumber',  placeholder: '9876543210' },
           { label: rentLabel,            key: 'monthlyRent',  placeholder: shopType === 'Rented' ? '5000' : '60000', type: 'number' },
+          { label: 'Shop Area (sqft)',   key: 'shopArea',     placeholder: 'e.g. 250' },
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -133,8 +135,8 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
           <input
             type="date"
             value={form.endDate}
-             onChange={e => set('endDate', e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+            readOnly
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
           />
         </div>
 
@@ -144,8 +146,8 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
           <input
             type="date"
             value={form.dueDate}
-             onChange={e => set('dueDate', e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+            readOnly
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
           />
         </div>
 
@@ -175,8 +177,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     paidRent: String(shop.paidRent),
     paymentStatus: shop.paymentStatus,
     currentDue: String(shop.currentDue),
-    endDate: shop.endDate,
-    dueDate: shop.dueDate,
+    shopArea: shop.shopArea ?? '',
     remark: shop.remark ?? '',
   });
 
@@ -190,18 +191,15 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     setSaving(true);
     try {
       const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
-      const statusChangedToDue = shop.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent) + Number(form.currentDue) || 0);
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
         phoneNumber: form.phoneNumber,
         monthlyRent: Number(form.monthlyRent),
         paidRent: Number(form.paidRent) || 0,
-        currentDue: newCurrentDue,
-        endDate: form.endDate,        
-        dueDate: form.dueDate,
+        currentDue: statusChangedToPaid ? shop.currentDue : (Number(form.currentDue) || 0),
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Shop['paymentStatus']),
+        shopArea: form.shopArea.trim() || undefined,
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -224,7 +222,8 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
-          { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },            
+          { label: 'Shop Area (sqft)', key: 'shopArea', placeholder: 'e.g. 250' },
+          // { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -247,26 +246,6 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             <option value="Paid">Paid</option>
           </select>
         </div>
-         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-          <input
-            type="date"
-            value={form.endDate}
-             onChange={e => set('endDate', e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          />
-        </div>
-
-        {/* Due Date - auto-filled, read-only */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-          <input
-            type="date"
-            value={form.dueDate}
-             onChange={e => set('dueDate', e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          />
-        </div>
         {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Current Due (₹)</label>
           <input
@@ -276,6 +255,12 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
           />
         </div> */}
+        {shop.paymentDate && (
+          <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Payment Date</span>
+            <span className="text-sm font-semibold text-gray-800">{new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
           <textarea
@@ -335,7 +320,7 @@ export default function MarketDetail({ market, onBack }: Props) {
     const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
+    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
@@ -367,18 +352,6 @@ export default function MarketDetail({ market, onBack }: Props) {
     await refresh();
     showSnackbar('Data refreshed', 'success');
   };
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-const handleMenuClick = (e, shopId) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-
-  setMenuOpen(menuOpen === shopId ? null : shopId);
-
-  setMenuPosition({
-    top: rect.bottom + 4,
-    left: rect.right - 120,
-  });
-};
 
   return (
     <div className="p-6 space-y-5">
@@ -500,7 +473,7 @@ const handleMenuClick = (e, shopId) => {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-gray-600 max-w-[200px] truncate" title={shop.remark || ''}>{shop.remark || '—'}</td>
-                  <td className="px-5 py-3.5 relative">
+                  <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-1">
                       {shop.paymentStatus === 'Due' && (
                         <button
@@ -523,15 +496,13 @@ const handleMenuClick = (e, shopId) => {
                       >
                         <Pencil size={16} />
                       </button> */}
-                      <div >
-                       <button
-      onClick={(e) => handleMenuClick(e, shop.id)}
-      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-    >
+                      <div className="relative">
+                        <button onClick={() => setMenuOpen(menuOpen === shop.id ? null : shop.id)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
                           <MoreHorizontal size={16} />
                         </button>
-                        {/* {menuOpen === shop.id && (
-                          <div className="absolute right-10 bottom-5 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
+                        {menuOpen === shop.id && (
+                          <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
                             <button onClick={() => { setSelected(shop); setMenuOpen(null); }}
                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                               <Eye size={14} /> View
@@ -545,7 +516,7 @@ const handleMenuClick = (e, shopId) => {
                               <X size={14} /> Delete
                             </button>
                           </div>
-                        )} */}
+                        )}
                       </div>
                     </div>
                   </td>
@@ -553,54 +524,6 @@ const handleMenuClick = (e, shopId) => {
               ))}
             </tbody>
           </table>
-          {menuOpen && (() => {
-  const shop = pageShops.find(s => s.id === menuOpen);
-
-  if (!shop) return null;
-
-  return (
-    <div
-      className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in"
-      style={{
-        top: menuPosition.top,
-        left: menuPosition.left,
-      }}
-    >
-      <button
-        onClick={() => {
-          setSelected(shop);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-      >
-        <Eye size={14} />
-        View
-      </button>
-
-      <button
-        onClick={() => {
-          setEditShop(shop);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-      >
-        <Pencil size={14} />
-        Edit
-      </button>
-
-      <button
-        onClick={() => {
-          handleDelete(shop.id);
-          setMenuOpen(null);
-        }}
-        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-      >
-        <X size={14} />
-        Delete
-      </button>
-    </div>
-  );
-})()}
         </div>
 
         {/* Pagination */}

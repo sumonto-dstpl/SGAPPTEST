@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil } from 'lucide-react';
+import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { Garage } from '../types';
 import Modal from '../components/Modal';
@@ -175,7 +175,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
 
   const handlePayment = async () => {
     try {
-      await updateGarage(garage.id, { currentDue: 0, paymentStatus: 'Paid' });
+      await updateGarage(garage.id, { currentDue: 0, paymentStatus: 'Paid', paymentDate: new Date().toISOString() });
       showSnackbar(`Payment marked as Paid for ${garage.garageNo}`, 'success');
       onClose();
     } catch { showSnackbar('Failed to update payment status', 'error'); }
@@ -217,6 +217,12 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             Mark as Paid (₹ {garage.monthlyRent.toLocaleString('en-IN')})
           </button>
         )}
+        <div className="flex gap-2">
+          <button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            <Printer size={16} /> Print
+          </button>
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">Close</button>
+        </div>
       </div>
     </Modal>
   );
@@ -256,8 +262,6 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     setSaving(true);
     try {
       const statusChangedToPaid = garage.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
-      const statusChangedToDue = garage.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.monthlyRent - garage.monthlyRent) + Number(form.currentDue) || 0);
       await updateGarage(garage.id, {
         garageNo: form.garageNo.trim(),
         ownerName: form.ownerName.trim(),
@@ -270,7 +274,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
         startDate: form.startDate,
         leaseEndDate: form.leaseEndDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
-        currentDue: newCurrentDue,
+        currentDue: statusChangedToPaid ? garage.currentDue : (Number(form.currentDue) || 0),
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -343,6 +347,12 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
           <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" value={form.monthlyRent}
   onChange={(value) => set("monthlyRent", value)}/>
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
+          {garage.paymentDate && (
+            <div className="col-span-2 bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-600">Payment Date</span>
+              <span className="text-sm font-semibold text-gray-800">{new Date(garage.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
             <select value={form.leaseType} onChange={e => set('leaseType', e.target.value)}
@@ -354,8 +364,6 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
   onChange={(value) => set("startDate", value)}/>
           <Field label="Lease End Date" name="leaseEndDate" type="date" value={form.leaseEndDate}
   onChange={(value) => set("leaseEndDate", value)}/>
-          <Field label="Paid Rent" name="paidRent" type="number" value={form.paidRent}
-  onChange={(value) => set("paidRent", value)}/>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
             <select value={form.paymentStatus} onChange={e => set('paymentStatus', e.target.value)}
@@ -405,7 +413,7 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, remark: remark || "", });
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
@@ -442,20 +450,6 @@ export default function Garages() {
     try { await deleteGarage(id); showSnackbar('Garage deleted', 'success'); } catch { showSnackbar('Failed to delete garage', 'error'); }
     setMenuOpen(null);
   };
-
-  // const [menuOpen, setMenuOpen] = useState(null);
-const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-const handleMenuClick = (e, garageId) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-
-  setMenuOpen(menuOpen === garageId ? null : garageId);
-
-  setMenuPosition({
-    top: rect.bottom + 4,
-    left: rect.right - 120,
-  });
-};
 
   return (
     <div className="p-6 space-y-6">
@@ -523,8 +517,8 @@ const handleMenuClick = (e, garageId) => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative">
-        <div className="overflow-x-auto relative">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
@@ -552,25 +546,40 @@ const handleMenuClick = (e, garageId) => {
                 </td>
                 <td className="px-4 py-4 text-gray-600 max-w-[200px] truncate" title={garage.remark || ''}>{garage.remark || '—'}</td>
                 <td className="px-4 py-4">
-  <div className="flex items-center justify-end gap-1">
-    {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
-      <button
-        onClick={() => setCollectGarage(garage)}
-        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
-      >
-        <Banknote size={13} />
-        Collect
-      </button>
-    )}
-
-    <button
-      onClick={(e) => handleMenuClick(e, garage.id)}
-      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-    >
-      <MoreHorizontal size={16} />
-    </button>
-  </div>
-</td>
+                  <div className="flex items-center justify-end gap-1">
+                    {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
+                      <button
+                        onClick={() => setCollectGarage(garage)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+                      >
+                        <Banknote size={13} />
+                        Collect
+                      </button>
+                    )}
+                    <div className="relative">
+                      <button onClick={() => setMenuOpen(menuOpen === garage.id ? null : garage.id)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
+                        <MoreHorizontal size={16} />
+                      </button>
+                      {menuOpen === garage.id && (
+                        <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[120px] animate-fade-in">
+                          <button onClick={() => { setViewGarage(garage); setMenuOpen(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                            <Eye size={14} /> View
+                          </button>
+                          <button onClick={() => { setEditGarage(garage); setMenuOpen(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                            <Pencil size={14} /> Edit
+                          </button>
+                          <button onClick={() => handleDelete(garage.id)}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                            <X size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </td>
               </tr>
             ))}
             {paginated.length === 0 && (
@@ -578,47 +587,6 @@ const handleMenuClick = (e, garageId) => {
             )}
           </tbody>
         </table>
-          {menuOpen && (
-  <div
-    className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px]"
-    style={{
-      top: menuPosition.top,
-      left: menuPosition.left,
-    }}
-  >
-    <button
-      onClick={() => {
-        const garage = paginated.find(g => g.id === menuOpen);
-        setViewGarage(garage);
-        setMenuOpen(null);
-      }}
-      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-    >
-      <Eye size={14} /> View
-    </button>
-
-    <button
-      onClick={() => {
-        const garage = paginated.find(g => g.id === menuOpen);
-        setEditGarage(garage);
-        setMenuOpen(null);
-      }}
-      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-    >
-      <Pencil size={14} /> Edit
-    </button>
-
-    <button
-      onClick={() => {
-        handleDelete(menuOpen);
-        setMenuOpen(null);
-      }}
-      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-    >
-      <X size={14} /> Delete
-    </button>
-  </div>
-)}
         </div>
 
         {/* Pagination */}

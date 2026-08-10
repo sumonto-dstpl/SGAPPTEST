@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Shop } from '../types';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Printer } from 'lucide-react';
 import { useData } from '../store/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import Modal from './Modal';
@@ -65,12 +65,14 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="Tenant Name"   value={shop.tenantName} />
         <Row label="Phone Number"  value={shop.phoneNumber} />
         <Row label="Shop Type"     value={shop.shopType} />
+        <Row label="Shop Area"     value={shop.shopArea ? `${shop.shopArea} sqft` : '—'} />
         <Row label="Monthly Rent"  value={`₹${shop.monthlyRent.toLocaleString('en-IN')}`} />
         <Row label="Paid Rent"     value={`₹${shop.paidRent.toLocaleString('en-IN')}`} />
         <Row label="Current Due"   value={`₹${shop.currentDue.toLocaleString('en-IN')}`} red={shop.currentDue > 0} />
         <Row label="Due Date"      value={fmtDate(shop.dueDate)} />
         <Row label="Start Date"    value={fmtDate(shop.startDate)} />
         <Row label="End Date"      value={fmtDate(shop.endDate)} />
+        {shop.paymentDate && <Row label="Payment Date" value={new Date(shop.paymentDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })} />}
         <Row label="Remark"       value={shop.remark || '—'} />
       </div>
 
@@ -83,9 +85,14 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
           Collect Payment — ₹{shop.currentDue.toLocaleString('en-IN')}
         </button>
       )}
-      <button onClick={onClose} className="mt-2 w-full py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-        Close
-      </button>
+      <div className="mt-2 flex gap-2">
+        <button onClick={() => window.print()} className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          <Printer size={16} /> Print
+        </button>
+        <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          Close
+        </button>
+      </div>
 
       {showCollect && (
         <CollectPaymentModal

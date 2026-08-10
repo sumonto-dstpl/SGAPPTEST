@@ -36,18 +36,20 @@ function exportExcel(markets: unknown[], shops: unknown[], garages: unknown[], p
     'Monthly Rent': m.monthlyRent, 'Address': m.address ?? '', 'Created': m.createdAt,
   }));
 
-  const sRows = (shops as { id: string; shopName: string; marketId: string; tenantName: string; phoneNumber: string; monthlyRent: number; paidRent: number; currentDue: number; dueDate: string; paymentStatus: string; shopType: string; startDate: string; endDate: string; remark?: string }[]).map(s => ({
+  const sRows = (shops as { id: string; shopName: string; marketId: string; tenantName: string; phoneNumber: string; monthlyRent: number; paidRent: number; currentDue: number; dueDate: string; paymentStatus: string; shopType: string; startDate: string; endDate: string; shopArea?: string; paymentDate?: string; remark?: string }[]).map(s => ({
     'Shop ID': s.id, 'Shop Name': s.shopName, 'Market ID': s.marketId, 'Tenant': s.tenantName,
     'Phone': s.phoneNumber, 'Monthly Rent': s.monthlyRent, 'Paid Rent': s.paidRent,
     'Current Due': s.currentDue, 'Due Date': s.dueDate, 'Status': s.paymentStatus,
-    'Type': s.shopType, 'Start': s.startDate, 'End': s.endDate, 'Remark': s.remark ?? '',
+    'Type': s.shopType, 'Start': s.startDate, 'End': s.endDate,
+    'Shop Area': s.shopArea ?? '', 'Payment Date': s.paymentDate ?? '', 'Remark': s.remark ?? '',
   }));
 
-  const gRows = (garages as { id: string; garageNo: string; ownerName: string; mobileNumber: string; vehicleNumber: string; vehicleType: string; monthlyRent: number; paidRent: number; paymentStatus: string; currentDue: number; leaseEndDate: string; leaseType: string; startDate: string; dueDate: string; address?: string; remark?: string }[]).map(g => ({
+  const gRows = (garages as { id: string; garageNo: string; ownerName: string; mobileNumber: string; vehicleNumber: string; vehicleType: string; monthlyRent: number; paidRent: number; paymentStatus: string; currentDue: number; leaseEndDate: string; leaseType: string; startDate: string; dueDate: string; address?: string; paymentDate?: string; remark?: string }[]).map(g => ({
     'Garage ID': g.id, 'Garage No': g.garageNo, 'Owner': g.ownerName, 'Mobile': g.mobileNumber,
     'Vehicle No': g.vehicleNumber, 'Vehicle Type': g.vehicleType, 'Monthly Rent': g.monthlyRent,
     'Paid Rent': g.paidRent, 'Status': g.paymentStatus, 'Current Due': g.currentDue, 'Lease End': g.leaseEndDate,
-    'Lease Type': g.leaseType, 'Start': g.startDate, 'Due Date': g.dueDate, 'Address': g.address ?? '', 'Remark': g.remark ?? '',
+    'Lease Type': g.leaseType, 'Start': g.startDate, 'Due Date': g.dueDate, 'Address': g.address ?? '',
+    'Payment Date': g.paymentDate ?? '', 'Remark': g.remark ?? '',
   }));
 
   const pRows = (payments as { id: string; date: string; name: string; type: string; amount: number; reference: string }[]).map(p => ({
@@ -248,6 +250,8 @@ export default function Backup() {
         shopType: (r['Type'] === 'Leased' ? 'Leased' : 'Rented') as Shop['shopType'],
         startDate: String(r['Start'] ?? ''),
         endDate: String(r['End'] ?? ''),
+        shopArea: r['Shop Area'] ? String(r['Shop Area']) : undefined,
+        paymentDate: r['Payment Date'] ? String(r['Payment Date']) : undefined,
         remark: r['Remark'] ? String(r['Remark']) : undefined,
       }));
 
@@ -267,6 +271,7 @@ export default function Backup() {
         startDate: String(r['Start'] ?? ''),
         dueDate: String(r['Due Date'] ?? r['Lease End'] ?? ''),
         address: r['Address'] ? String(r['Address']) : undefined,
+        paymentDate: r['Payment Date'] ? String(r['Payment Date']) : undefined,
         remark: r['Remark'] ? String(r['Remark']) : undefined,
       }));
 
