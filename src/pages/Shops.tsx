@@ -279,12 +279,12 @@ export default function Shops() {
                           Collect
                         </button>
                       )}
-                      <button onClick={() => setEditShop(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="Edit">
-                        <Pencil size={16} />
-                      </button>
-                      <button onClick={() => setSelected(s)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors" title="View">
-                        <Eye size={16} />
-                      </button>
+                      <button
+      onClick={(e) => handleMenuClick(e, shop.id)}
+      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+    >
+                          <MoreHorizontal size={16} />
+                        </button>
                     </div>
                   </td>
                 </tr>
