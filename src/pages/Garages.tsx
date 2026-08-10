@@ -443,6 +443,20 @@ export default function Garages() {
     setMenuOpen(null);
   };
 
+  const [menuOpen, setMenuOpen] = useState(null);
+const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+const handleMenuClick = (e, garageId) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+
+  setMenuOpen(menuOpen === garageId ? null : garageId);
+
+  setMenuPosition({
+    top: rect.bottom + 4,
+    left: rect.right - 120,
+  });
+};
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -537,41 +551,26 @@ export default function Garages() {
                   </span>
                 </td>
                 <td className="px-4 py-4 text-gray-600 max-w-[200px] truncate" title={garage.remark || ''}>{garage.remark || '—'}</td>
-                <td className="px-4 py-4 relative">
-                  <div className="flex items-center justify-end gap-1">
-                    {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
-                      <button
-                        onClick={() => setCollectGarage(garage)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
-                      >
-                        <Banknote size={13} />
-                        Collect
-                      </button>
-                    )}
-                    <div >
-                      <button onClick={() => setMenuOpen(menuOpen === garage.id ? null : garage.id)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
-                        <MoreHorizontal size={16} />
-                      </button>
-                      {menuOpen === garage.id && (
-                        <div className="absolute right-10 bottom-0 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px] animate-fade-in">
-                          <button onClick={() => { setViewGarage(garage); setMenuOpen(null); }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                            <Eye size={14} /> View
-                          </button>
-                          <button onClick={() => { setEditGarage(garage); setMenuOpen(null); }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                            <Pencil size={14} /> Edit
-                          </button>
-                          <button onClick={() => handleDelete(garage.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                            <X size={14} /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </td>
+                <td className="px-4 py-4">
+  <div className="flex items-center justify-end gap-1">
+    {garage.paymentStatus === 'Due' && garage.currentDue > 0 && (
+      <button
+        onClick={() => setCollectGarage(garage)}
+        className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+      >
+        <Banknote size={13} />
+        Collect
+      </button>
+    )}
+
+    <button
+      onClick={(e) => handleMenuClick(e, garage.id)}
+      className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+    >
+      <MoreHorizontal size={16} />
+    </button>
+  </div>
+</td>
               </tr>
             ))}
             {paginated.length === 0 && (
@@ -579,6 +578,47 @@ export default function Garages() {
             )}
           </tbody>
         </table>
+          {menuOpen && (
+  <div
+    className="fixed bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-[9999] min-w-[120px]"
+    style={{
+      top: menuPosition.top,
+      left: menuPosition.left,
+    }}
+  >
+    <button
+      onClick={() => {
+        const garage = paginated.find(g => g.id === menuOpen);
+        setViewGarage(garage);
+        setMenuOpen(null);
+      }}
+      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+    >
+      <Eye size={14} /> View
+    </button>
+
+    <button
+      onClick={() => {
+        const garage = paginated.find(g => g.id === menuOpen);
+        setEditGarage(garage);
+        setMenuOpen(null);
+      }}
+      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+    >
+      <Pencil size={14} /> Edit
+    </button>
+
+    <button
+      onClick={() => {
+        handleDelete(menuOpen);
+        setMenuOpen(null);
+      }}
+      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+    >
+      <X size={14} /> Delete
+    </button>
+  </div>
+)}
         </div>
 
         {/* Pagination */}
