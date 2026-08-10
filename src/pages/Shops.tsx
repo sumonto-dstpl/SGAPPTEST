@@ -134,6 +134,7 @@ export default function Shops() {
   const [page, setPage]           = useState(1);
   const [selected, setSelected]   = useState<Shop | null>(null);
   const [collectShop, setCollectShop] = useState<Shop | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [editShop, setEditShop]   = useState<Shop | null>(null);
 
   const handleCollect = async (shop: Shop, amount: number, remark: string) => {
