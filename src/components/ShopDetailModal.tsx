@@ -66,7 +66,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
         <Row label="Phone Number"  value={shop.phoneNumber} />
         <Row label="Shop Type"     value={shop.shopType} />
         <Row label="Monthly Rent"  value={`₹${shop.monthlyRent.toLocaleString('en-IN')}`} />
-        <Row label="Shop Area (sqft)" value={shop.shopArea || '—'} />
+        <Row label="Shop Area (sqft)" value={shop.shopArea+"sqft" || '—'} />
         <Row label="Paid Rent"     value={`₹${shop.paidRent.toLocaleString('en-IN')}`} />
         <Row label="Current Due"   value={`₹${shop.currentDue.toLocaleString('en-IN')}`} red={shop.currentDue > 0} />
         <Row label="Due Date"      value={fmtDate(shop.dueDate)} />
