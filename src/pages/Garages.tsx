@@ -281,7 +281,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     leaseEndDate: garage.leaseEndDate,
     paymentStatus: garage.paymentStatus,
     currentDue: String(garage.currentDue),
-    paymentDate: garage.paymentDate ?? '',
+    // paymentDate: garage.paymentDate ?? '',
     remark: garage.remark ?? '',
   });
   const [saving, setSaving] = useState(false);
@@ -315,7 +315,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
         leaseEndDate: form.leaseEndDate,
         paymentStatus: statusChangedToPaid ? 'Due' : (form.paymentStatus as Garage['paymentStatus']),
         currentDue: newCurrentDue,
-        paymentDate: form.paymentDate || undefined,
+        // paymentDate: form.paymentDate || undefined,
         remark: form.remark.trim() || "",
       });
       if (statusChangedToPaid) {
@@ -409,8 +409,8 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
             </select>
           </div>
           {/* <F label="Current Due (₹)" name="currentDue" type="number" /> */}
-          <Field label="Payment Date" name="paymentDate" type="datetime-local" value={form.paymentDate ? form.paymentDate.slice(0, 16) : ''}
-            onChange={(value) => set('paymentDate', value ? new Date(value).toISOString() : '')}/>
+          {/* <Field label="Payment Date" name="paymentDate" type="datetime-local" value={form.paymentDate ? form.paymentDate.slice(0, 16) : ''}
+            onChange={(value) => set('paymentDate', value ? new Date(value).toISOString() : '')}/> */}
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Remark</label>
@@ -452,7 +452,15 @@ export default function Garages() {
     const newPaid = (garage.paidRent ?? 0) + amount;
     const newDue = Math.max(0, garage.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString(), remark: remark || "", });
+     const newPayment: Payment = {
+  amount: amount,
+  paymentDate: new Date().toISOString(),
+ remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",
+};    
+    await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+    ...(garage.payments || []),
+    newPayment,
+  ], remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid", });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
