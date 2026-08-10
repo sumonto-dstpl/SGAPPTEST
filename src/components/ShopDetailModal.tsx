@@ -67,7 +67,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
       const newPayment: Payment = {
   amount: amount,
   paymentDate: new Date().toISOString(),
-  remark: remark || "",
+ remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",
 };
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
