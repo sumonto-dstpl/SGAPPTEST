@@ -6,6 +6,11 @@ export interface Market {
   address?: string;
   createdAt: string;
 }
+export interface Payment {
+  amount: number;
+  paymentDate: string;
+  remark?: string;
+}
 
 export interface Shop {
   id: string;
@@ -22,7 +27,7 @@ export interface Shop {
   startDate: string;
   endDate: string;
   shopArea?: string;
-  paymentDate?: string;
+   payments: Payment[];
   remark?: string;
 }
 
