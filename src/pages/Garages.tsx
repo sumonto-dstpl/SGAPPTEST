@@ -250,8 +250,9 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
               {garage.paymentStatus}
             </span>
           </div>
-          <PaymentRows payments={garage.payments} />
+          
         </div>
+        <PaymentRows payments={garage.payments} />
         <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
           <Printer size={16} /> Print Details
         </button>
