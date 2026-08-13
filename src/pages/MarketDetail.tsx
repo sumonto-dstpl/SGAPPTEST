@@ -56,24 +56,24 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   }, [form.startDate, shopType]);
 
 // When end date changes, due date = next day
-useEffect(() => {
-  if (form.endDate) {
-    const endDate = new Date(form.endDate);
+// useEffect(() => {
+//   if (form.endDate) {
+//     const endDate = new Date(form.endDate);
 
-    const dueDate = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate() + 1
-    );
+//     const dueDate = new Date(
+//       endDate.getFullYear(),
+//       endDate.getMonth(),
+//       endDate.getDate() + 1
+//     );
 
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+//     const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
-    setForm(p => ({
-      ...p,
-      dueDate: formatDate(dueDate),
-    }));
-  }
-}, [form.endDate]);
+//     setForm(p => ({
+//       ...p,
+//       dueDate: formatDate(dueDate),
+//     }));
+//   }
+// }, [form.endDate]);
 
 
   // Reset dates when shop type changes
