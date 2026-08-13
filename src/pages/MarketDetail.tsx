@@ -95,7 +95,7 @@ useEffect(() => {
     const dueDate = new Date(
       endDate.getFullYear(),
       endDate.getMonth(),
-      endDate.getDate() + 1
+      endDate.getDate() + 2
     );
 
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
