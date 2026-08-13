@@ -33,27 +33,80 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  // Autofill end date and due date based on start date
-  useEffect(() => {
-    if (form.startDate) {
-      const startDate = new Date(form.startDate);
-      let endDate: Date;
-      let dueDate: Date;
+  // // Autofill end date and due date based on start date
+  // useEffect(() => {
+  //   if (form.startDate) {
+  //     const startDate = new Date(form.startDate);
+  //     let endDate: Date;
+  //     let dueDate: Date;
 
-      if (shopType === 'Rented') {
-        // Monthly: end date = one day before same date next month, due date = same date next month
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-        dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
-      } else {
-        // Yearly: end date = one day before same date next year, due date = same date next year
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
-        dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
-      }
+  //     if (shopType === 'Rented') {
+  //       // Monthly: end date = one day before same date next month, due date = same date next month
+  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+  //       dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
+  //     } else {
+  //       // Yearly: end date = one day before same date next year, due date = same date next year
+  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
+  //       dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
+  //     }
 
-      const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  //     setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //   }
+  // }, [form.startDate, shopType]);
+
+  // When start date or shop type changes
+useEffect(() => {
+  if (form.startDate) {
+    const startDate = new Date(form.startDate);
+    let endDate: Date;
+
+    if (shopType === 'Rented') {
+      // Monthly: same date next month
+      endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate()
+      );
+    } else {
+      // Yearly: same date next year
+      endDate = new Date(
+        startDate.getFullYear() + 1,
+        startDate.getMonth(),
+        startDate.getDate()
+      );
     }
-  }, [form.startDate,form.endDate, shopType]);
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    setForm(p => ({
+      ...p,
+      endDate: formatDate(endDate),
+    }));
+  }
+}, [form.startDate, shopType]);
+
+
+// When end date changes, due date = next day
+useEffect(() => {
+  if (form.endDate) {
+    const endDate = new Date(form.endDate);
+
+    const dueDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    );
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.endDate]);
+
 
   // Reset dates when shop type changes
   useEffect(() => {
