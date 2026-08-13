@@ -139,8 +139,7 @@ useEffect(() => {
 }, [
   form.startDate,
   form.endDate,
-  form.monthlyRent,
-  shopType,
+  form.monthlyRent,  
 ]);
 
 
