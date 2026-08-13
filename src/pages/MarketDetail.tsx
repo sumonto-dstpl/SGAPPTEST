@@ -273,6 +273,23 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     remark: shop.remark ?? '',
   });
 
+  useEffect(() => {
+  if (form.endDate) {
+    const endDate = new Date(form.endDate);
+
+    const dueDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    );
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.endDate]);
+
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = async () => {
