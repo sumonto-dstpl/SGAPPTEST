@@ -1,0 +1,2 @@
+ALTER TABLE shops ADD COLUMN payments TEXT;
+ALTER TABLE garages ADD COLUMN payments TEXT;

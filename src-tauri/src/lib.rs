@@ -38,6 +38,12 @@ pub fn run() {
             sql: include_str!("../migrations/006_add_shop_area_payment_date.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 7,
+            description: "add_payments_column",
+            sql: include_str!("../migrations/007_add_payments_column.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

@@ -12,7 +12,7 @@
  */
 
 import Database from '@tauri-apps/plugin-sql';
-import { Market, Shop, Garage, Payment, BackupRecord } from '../types';
+import { Market, Shop, Garage, Payment, BackupRecord, PaymentDate } from '../types';
 import { DatabaseAdapter, AllData, AdapterContext } from './database';
 
 // ─── Singleton DB connection ──────────────────────────────────────────────────
@@ -60,6 +60,7 @@ function mapShop(r: Row): Shop {
     endDate: r.end_date as string,
     shopArea: (r.shop_area as string) || undefined,
     paymentDate: (r.payment_date as string) || undefined,
+    payments: r.payments ? JSON.parse(r.payments as string) as PaymentDate[] : [],
     remark: (r.remark as string) || undefined,
   };
 }
@@ -82,6 +83,7 @@ function mapGarage(r: Row): Garage {
     startDate: r.start_date as string,
     dueDate: (r.due_date as string) ?? '',
     paymentDate: (r.payment_date as string) || undefined,
+    payments: r.payments ? JSON.parse(r.payments as string) as PaymentDate[] : [],
     remark: (r.remark as string) || undefined,
   };
 }
@@ -184,12 +186,12 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
       await conn.execute(
         `INSERT INTO shops
            (id, market_id, shop_name, tenant_name, phone_number, monthly_rent,
-            paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, shop_area, payment_date, remark, owner)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+            paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, shop_area, payment_date, remark, payments, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
         [id, data.marketId, data.shopName, data.tenantName, data.phoneNumber,
          data.monthlyRent, data.paidRent, data.currentDue, data.dueDate,
          data.paymentStatus, data.shopType, data.startDate, data.endDate,
-         data.shopArea ?? null, data.paymentDate ?? null, data.remark ?? null, owner],
+         data.shopArea ?? null, data.paymentDate ?? null, data.remark ?? null, data.payments ? JSON.stringify(data.payments) : null, owner],
       );
       return { id, ...data };
     },
@@ -207,13 +209,17 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
       let i = 1;
       for (const [key, col] of Object.entries(map)) {
         if (patch[key as keyof typeof patch] !== undefined) {
-          parts.push(`${col}=${i++}`);
+          parts.push(`${col}=$${i++}`);
           vals.push(patch[key as keyof typeof patch]);
         }
       }
+      if (patch.payments !== undefined) {
+        parts.push(`payments=$${i++}`);
+        vals.push(JSON.stringify(patch.payments));
+      }
       if (parts.length) {
         vals.push(id, owner);
-        await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=${i} AND owner=${i+1}`, vals);
+        await conn.execute(`UPDATE shops SET ${parts.join(', ')} WHERE id=$${i} AND owner=$${i+1}`, vals);
       }
       const rows = await conn.select<Row[]>('SELECT * FROM shops WHERE id=$1 AND owner=$2', [id, owner]);
       return mapShop(rows[0]);
@@ -232,11 +238,11 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
         `INSERT INTO garages
            (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type,
             monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type,
-            address, start_date, due_date, payment_date, remark, owner)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+            address, start_date, due_date, payment_date, remark, payments, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
         [id, data.garageNo, data.ownerName, data.mobileNumber, data.vehicleNumber,
          data.vehicleType, data.monthlyRent, data.paidRent ?? 0, data.paymentStatus, data.currentDue,
-         data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate, data.dueDate ?? '', data.paymentDate ?? null, data.remark ?? null, owner],
+         data.leaseEndDate, data.leaseType, data.address ?? null, data.startDate, data.dueDate ?? '', data.paymentDate ?? null, data.remark ?? null, data.payments ? JSON.stringify(data.payments) : null, owner],
       );
       return { id, ...data };
     },
@@ -258,6 +264,10 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
           parts.push(`${col}=$${i++}`);
           vals.push(patch[key as keyof typeof patch]);
         }
+      }
+      if (patch.payments !== undefined) {
+        parts.push(`payments=$${i++}`);
+        vals.push(JSON.stringify(patch.payments));
       }
       if (parts.length) {
         vals.push(id, owner);
@@ -326,14 +336,14 @@ export function createSqliteAdapter(ctx: AdapterContext): DatabaseAdapter {
       }
       for (const s of data.shops) {
         await conn.execute(
-          `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, shop_area, payment_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-          [newId(), marketIdMap.get(s.marketId) ?? s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.shopArea ?? null, s.paymentDate ?? null, s.remark ?? null, owner],
+          `INSERT INTO shops (id, market_id, shop_name, tenant_name, phone_number, monthly_rent, paid_rent, current_due, due_date, payment_status, shop_type, start_date, end_date, shop_area, payment_date, remark, payments, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+          [newId(), marketIdMap.get(s.marketId) ?? s.marketId, s.shopName, s.tenantName, s.phoneNumber, s.monthlyRent, s.paidRent, s.currentDue, s.dueDate, s.paymentStatus, s.shopType, s.startDate, s.endDate, s.shopArea ?? null, s.paymentDate ?? null, s.remark ?? null, s.payments ? JSON.stringify(s.payments) : null, owner],
         );
       }
       for (const g of data.garages) {
         await conn.execute(
-          `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, payment_date, remark, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
-          [newId(), g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.paymentDate ?? null, g.remark ?? null, owner],
+          `INSERT INTO garages (id, garage_no, owner_name, mobile_number, vehicle_number, vehicle_type, monthly_rent, paid_rent, payment_status, current_due, lease_end_date, lease_type, address, start_date, due_date, payment_date, remark, payments, owner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+          [newId(), g.garageNo, g.ownerName, g.mobileNumber, g.vehicleNumber, g.vehicleType, g.monthlyRent, g.paidRent ?? 0, g.paymentStatus, g.currentDue, g.leaseEndDate, g.leaseType, g.address ?? null, g.startDate, g.dueDate, g.paymentDate ?? null, g.remark ?? null, g.payments ? JSON.stringify(g.payments) : null, owner],
         );
       }
       for (const p of data.payments) {
