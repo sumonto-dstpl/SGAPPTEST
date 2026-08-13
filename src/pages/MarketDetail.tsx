@@ -27,7 +27,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   const [shopType, setShopType] = useState<'Rented' | 'Leased'>('Rented');
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',
+    shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',currentDue: '',
     dueDate: '', startDate: '', endDate: '', shopArea: '',
   });
 
@@ -104,6 +104,45 @@ useEffect(() => {
     }));
   }
 }, [form.endDate]);
+  useEffect(() => {
+  if (!form.startDate || !form.endDate || !form.monthlyRent) {
+    setForm(p => ({ ...p, currentDue: '' }));
+    return;
+  }
+
+  const [startYear, startMonth, startDay] = form.startDate
+    .split('-')
+    .map(Number);
+
+  const [endYear, endMonth, endDay] = form.endDate
+    .split('-')
+    .map(Number);
+
+  let totalMonths =
+    (endYear - startYear) * 12 +
+    (endMonth - startMonth);
+
+  // Same day or later = next billing month has started
+  if (endDay >= startDay) {
+    totalMonths += 1;
+  }
+
+  // At least 1 month
+  totalMonths = Math.max(1, totalMonths);
+
+  const currentDue = Number(form.monthlyRent) * totalMonths;
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  form.startDate,
+  form.endDate,
+  form.monthlyRent,
+  shopType,
+]);
+
 
   // Reset dates when shop type changes
   useEffect(() => {
@@ -124,12 +163,12 @@ useEffect(() => {
       await addShop({
         marketId: market.id, shopName: form.shopName, tenantName: form.tenantName,
         phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent),
-        paidRent: 0, currentDue: Number(form.monthlyRent), dueDate: form.dueDate,
+        paidRent: 0, currentDue: Number(form.currentDue), dueDate: form.dueDate,
         paymentStatus: 'Due', shopType, startDate: form.startDate, endDate: form.endDate,
         shopArea: form.shopArea.trim() || undefined,
       });
       showSnackbar(`${form.shopName} added successfully`, 'success');
-      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
+      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',currentDue: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
       onClose();
     } catch { showSnackbar('Failed to add shop', 'error'); }
     finally { setSaving(false); }
@@ -155,6 +194,7 @@ useEffect(() => {
           { label: 'Tenant Name *',      key: 'tenantName',   placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *',     key: 'phoneNumber',  placeholder: '9876543210' },
           { label: rentLabel,            key: 'monthlyRent',  placeholder: shopType === 'Rented' ? '5000' : '60000', type: 'number' },
+      { label: "Current Due", key: 'currentDue',  placeholder: '5000', type: 'number' },
           { label: 'Shop Area (sqft)',     key: 'shopArea',     placeholder: 'e.g. 250' },
         ].map(f => (
           <div key={f.key}>
