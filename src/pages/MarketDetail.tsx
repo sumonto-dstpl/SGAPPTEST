@@ -43,17 +43,17 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
       if (shopType === 'Rented') {
         // Monthly: end date = one day before same date next month, due date = same date next month
         endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
+        dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
       } else {
         // Yearly: end date = one day before same date next year, due date = same date next year
         endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
+        dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
       }
 
       const formatDate = (d: Date) => d.toISOString().split('T')[0];
       setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
     }
-  }, [form.startDate, shopType]);
+  }, [form.startDate,form.endDate, shopType]);
 
   // Reset dates when shop type changes
   useEffect(() => {
