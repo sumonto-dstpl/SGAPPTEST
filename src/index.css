@@ -37,10 +37,10 @@ input[type="password"]::-ms-clear {
   }
 
   /* Hide everything by default */
-  body * {
+  /* body * {
     visibility: hidden;
   }
-
+ */
   /* Show only the details you want to print */
   .print-details,
   .print-details * {
