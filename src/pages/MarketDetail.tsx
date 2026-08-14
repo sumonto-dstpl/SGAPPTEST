@@ -361,6 +361,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
   shop.shopType,
   form.endDate,
   form.monthlyRent,
+    form.paidRent
 ]);
 
 
