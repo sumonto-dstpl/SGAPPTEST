@@ -56,7 +56,12 @@ function PaymentRows({ payments }: { payments?: PaymentDate[] }) {
 }
 
 export default function ShopDetailModal({ shop, onClose }: Props) {
- const newPaid = shop.paidRent + amount;
+  const { updateShop, addPayment } = useData();
+  const { showSnackbar } = useSnackbar();
+  const [showCollect, setShowCollect] = useState(false);
+
+  const handleCollect = async (amount: number, remark: string) => {
+    const newPaid = shop.paidRent + amount;
     const newDue = Math.max(0, shop.currentDue - amount);
     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
       const newPayment: PaymentDate = {
@@ -64,6 +69,20 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
   paymentDate: new Date().toISOString(),
  remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",
 };
+
+  //    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+  //   ...(shop.payments || []),
+  //   newPayment,
+  // ], remark: paymentRemark,});
+  //     // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid", 
+  //   await addPayment({
+  //     date: new Date().toISOString().split('T')[0],
+  //     name: `${shop.tenantName} (${shop.shopName})`,
+  //     type: 'Shop',
+  //     paymentAmount,
+  //     reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+  //     remark: remark || "",
+  //   });
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
     newPayment,
@@ -76,7 +95,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
       amount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || undefined,
-    });
+  //   });
     showSnackbar(
       `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
       'success',
