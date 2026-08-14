@@ -350,19 +350,18 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
 
   totalPeriods = Math.max(1, totalPeriods);
 
-  const currentDue = (Number(form.monthlyRent) * totalPeriods)-shop.paidRent;
+  const currentDue = (Number(form.monthlyRent) * totalPeriods)-(Number(form.paidRent) || 0);
 
   setForm(p => ({
     ...p,
     currentDue: String(currentDue),
   }));
 }, [
-    form.paidRent,
   shop.startDate,
   shop.shopType,
   form.endDate,
   form.monthlyRent,
-    
+    form.paidRent,
 ]);
 
 
