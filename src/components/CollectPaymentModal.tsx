@@ -15,7 +15,7 @@ interface Props {
 export default function CollectPaymentModal({ open, onClose, title, currentDue, remarks, onConfirm }: Props) {
   const { showSnackbar } = useSnackbar();
   const [amount, setAmount] = useState(String(currentDue));
-  const [remark, setRemark] = useState(remarks?? '');
+  const [remark, setRemark] = useState('');
   const [saving, setSaving] = useState(false);
 
   const numericAmount = Number(amount) || 0;
@@ -23,8 +23,8 @@ export default function CollectPaymentModal({ open, onClose, title, currentDue, 
 
   useEffect(() => {
   setAmount(String(currentDue));
-  setRemark(remarks ?? '');
-}, [currentDue, remarks]);
+  // setRemark(remarks ?? '');
+}, [currentDue]);
 
   const handleConfirm = async () => {
     if (numericAmount > currentDue) {
