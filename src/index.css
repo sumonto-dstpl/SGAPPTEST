@@ -25,3 +25,37 @@ input[type="password"]::-ms-reveal {
 input[type="password"]::-ms-clear {
   display: none;
 }
+
+@media print {
+  @page {
+    margin: 10mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  
+  body * {
+    visibility: hidden;
+  }
+
+  
+  .print-details,
+  .print-details * {
+    visibility: visible;
+  }
+
+  .print-details {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  
+  .print-button {
+    display: none !important;
+  }
+}
