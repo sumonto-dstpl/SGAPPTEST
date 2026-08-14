@@ -193,7 +193,7 @@ useEffect(() => {
           { label: 'Tenant Name *',      key: 'tenantName',   placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *',     key: 'phoneNumber',  placeholder: '9876543210' },
           { label: rentLabel,            key: 'monthlyRent',  placeholder: shopType === 'Rented' ? '5000' : '60000', type: 'number' },
-      { label: "Current Due", key: 'currentDue',  placeholder: '5000', type: 'number' },
+      { label: "Current Due (₹)", key: 'currentDue',  placeholder: '5000', type: 'number' },
           { label: 'Shop Area (sqft)',     key: 'shopArea',     placeholder: 'e.g. 250' },
         ].map(f => (
           <div key={f.key}>
@@ -410,6 +410,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: "Current Due (₹)", key: 'currentDue',  placeholder: '5000', type: 'number' },
           { label: 'Shop Area (sqft)',     key: 'shopArea',    placeholder: 'e.g. 250' },
           { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
         ].map(f => (
