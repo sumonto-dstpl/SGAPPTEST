@@ -36,12 +36,12 @@ input[type="password"]::-ms-clear {
     padding: 0;
   }
 
-  /* Hide everything by default */
-  /* body * {
+  
+  body * {
     visibility: hidden;
   }
- */
-  /* Show only the details you want to print */
+
+  
   .print-details,
   .print-details * {
     visibility: visible;
@@ -54,9 +54,8 @@ input[type="password"]::-ms-clear {
     width: 100%;
   }
 
-  /* Don't print the print button */
+  
   .print-button {
     display: none !important;
   }
-}
- */
+} */
