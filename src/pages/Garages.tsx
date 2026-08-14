@@ -223,6 +223,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
   return (
     <Modal open={true} onClose={onClose} title={`${garage.garageNo} — ${garage.ownerName}`} width="max-w-xl">
       <div className="space-y-4">
+        <div className="print-details">
         <div className="grid grid-cols-2 gap-4">
           {[
             { label: 'Garage No.', value: garage.garageNo },
@@ -253,14 +254,22 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
           
         </div>
         <PaymentRows payments={garage.payments} />
-        <button onClick={() => window.print()} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-          <Printer size={16} /> Print Details
-        </button>
+        </div>
+     <div className="no-print">
+      <button
+        onClick={() => window.print()}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+      >
+        <Printer size={16} />
+        Print Details
+      </button>
+    </div>
         {/* {garage.paymentStatus === 'Due' && (
           <button onClick={handlePayment} className="w-full px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">
             Mark as Paid (₹ {garage.monthlyRent.toLocaleString('en-IN')})
           </button>
         )} */}
+        
       </div>
     </Modal>
   );
@@ -450,23 +459,42 @@ export default function Garages() {
   const [collectGarage, setCollectGarage] = useState<Garage | null>(null);
 
   const handleCollect = async (garage: Garage, amount: number, remark: string) => {
-    const newPaid = (garage.paidRent ?? 0) + amount;
-    const newDue = Math.max(0, garage.currentDue - amount);
-    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-     const newPayment: PaymentDate = {
-  amount: amount,
+//     const newPaid = (garage.paidRent ?? 0) + amount;
+//     const newDue = Math.max(0, garage.currentDue - amount);
+//     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+//      const newPayment: PaymentDate = {
+//   amount: amount,
+//   paymentDate: new Date().toISOString(),
+//  remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",
+// };    
+      const currentDue = Number(garage.currentDue) || 0;
+const paymentAmount = Number(amount) || 0;
+const paidRent = Number(garage.paidRent) || 0;
+
+const newPaid = paidRent + paymentAmount;
+const newDue = Math.max(0, currentDue - paymentAmount);
+
+const isFullyPaid = paymentAmount >= currentDue;
+const newStatus = isFullyPaid ? 'Paid' : 'Due';
+
+const paymentRemark =
+  remark.trim() ||
+  (isFullyPaid ? 'Fully Paid' : 'Partially Paid');
+
+const newPayment: PaymentDate = {
+  amount: paymentAmount,
   paymentDate: new Date().toISOString(),
- remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",
-};    
+  remark: paymentRemark,
+};
     await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(garage.payments || []),
     newPayment,
-  ], remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid", });
+  ], remark:paymentRemark, });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
       type: 'Garage',
-      amount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
