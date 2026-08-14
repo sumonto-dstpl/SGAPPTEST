@@ -532,17 +532,38 @@ export default function MarketDetail({ market, onBack }: Props) {
   const totalDue   = marketShops.reduce((s, x) => s + x.currentDue, 0);
 
   const handleCollect = async (shop: Shop, amount: number, remark: string) => {
-    const newPaid = shop.paidRent + amount;
-    const newDue = Math.max(0, shop.currentDue - amount);
-    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-     const paymentRemark =
-    remark.trim() || (newDue <= 0 ? "Fully Paid" : "Partially Paid");
-    const newPayment: PaymentDate = {
-  amount: amount,
+//     const newPaid = shop.paidRent + amount;
+//     const newDue = Math.max(0, shop.currentDue - amount);
+//     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+//      const paymentRemark =
+//     remark.trim() || (newDue <= 0 ? "Fully Paid" : "Partially Paid");
+//     const newPayment: PaymentDate = {
+//   amount: amount,
+//   paymentDate: new Date().toISOString(),
+//   remark: paymentRemark,
+//     // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid",
+// };
+
+    const currentDue = Number(shop.currentDue) || 0;
+const paymentAmount = Number(amount) || 0;
+const paidRent = Number(shop.paidRent) || 0;
+
+const newPaid = paidRent + paymentAmount;
+const newDue = Math.max(0, currentDue - paymentAmount);
+
+const isFullyPaid = paymentAmount >= currentDue;
+const newStatus = isFullyPaid ? 'Paid' : 'Due';
+
+const paymentRemark =
+  remark.trim() ||
+  (isFullyPaid ? 'Fully Paid' : 'Partially Paid');
+
+const newPayment: PaymentDate = {
+  amount: paymentAmount,
   paymentDate: new Date().toISOString(),
   remark: paymentRemark,
-    // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid",
 };
+
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
     newPayment,
@@ -552,7 +573,7 @@ export default function MarketDetail({ market, onBack }: Props) {
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
       type: 'Shop',
-      amount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
