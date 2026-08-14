@@ -23,8 +23,8 @@ export default function CollectPaymentModal({ open, onClose, title, currentDue, 
 
   useEffect(() => {
   setAmount(String(currentDue));
-  setRemark(remarks ?? '');
-}, [currentDue, remarks]);
+  // setRemark(remarks ?? '');
+}, [currentDue]);
 
   const handleConfirm = async () => {
     if (numericAmount > currentDue) {
