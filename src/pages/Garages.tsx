@@ -494,7 +494,7 @@ const newPayment: PaymentDate = {
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
       type: 'Garage',
-      paymentAmount,
+      amount: paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
