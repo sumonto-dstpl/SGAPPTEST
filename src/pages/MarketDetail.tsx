@@ -280,15 +280,27 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
 
   return `${year}-${month}-${day}`;
 };
+//   useEffect(() => {
+//   if (form.endDate) {
+//     const endDate = new Date(form.endDate);
+
+//     const dueDate = new Date(
+//       endDate.getFullYear(),
+//       endDate.getMonth(),
+//       endDate.getDate() + 1
+//     );
+
+//     setForm(p => ({
+//       ...p,
+//       dueDate: formatDate(dueDate),
+//     }));
+//   }
+// }, [form.endDate]);
   useEffect(() => {
   if (form.endDate) {
-    const endDate = new Date(form.endDate);
+    const [year, month, day] = form.endDate.split('-').map(Number);
 
-    const dueDate = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate() + 1
-    );
+    const dueDate = new Date(year, month - 1, day + 1);
 
     setForm(p => ({
       ...p,
@@ -296,6 +308,61 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     }));
   }
 }, [form.endDate]);
+
+  useEffect(() => {
+  if (!shop.startDate || !form.endDate || !form.monthlyRent) {
+    return;
+  }
+
+  const [startYear, startMonth, startDay] =
+    shop.startDate.split('-').map(Number);
+
+  const [endYear, endMonth, endDay] =
+    form.endDate.split('-').map(Number);
+
+  let totalPeriods: number;
+
+  if (shop.shopType === 'Rented') {
+    // Monthly calculation
+    totalPeriods =
+      (endYear - startYear) * 12 +
+      (endMonth - startMonth);
+
+    // If end date reaches the start day,
+    // another month has started.
+    if (endDay >= startDay) {
+      totalPeriods += 1;
+    }
+  } else {
+    // Yearly calculation for Leased
+    totalPeriods = endYear - startYear;
+
+    // If end date reaches the anniversary date,
+    // another year has started.
+    const reachedAnniversary =
+      endMonth > startMonth ||
+      (endMonth === startMonth && endDay >= startDay);
+
+    if (reachedAnniversary) {
+      totalPeriods += 1;
+    }
+  }
+
+  totalPeriods = Math.max(1, totalPeriods);
+
+  const currentDue = Number(form.monthlyRent) * totalPeriods;
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  shop.startDate,
+  shop.shopType,
+  form.endDate,
+  form.monthlyRent,
+]);
+
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -308,7 +375,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     try {
       const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       const statusChangedToDue = shop.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent) + Number(form.currentDue) || 0);
+      const newCurrentDue= statusChangedToDue ? form.monthlyRent(here) : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent)(here) + Number(form.currentDue) || 0);
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
