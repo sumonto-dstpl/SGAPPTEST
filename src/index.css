@@ -26,7 +26,7 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
-@media print {
+/* @media print {
   @page {
     margin: 10mm;
   }
@@ -59,3 +59,4 @@ input[type="password"]::-ms-clear {
     display: none !important;
   }
 }
+ */
