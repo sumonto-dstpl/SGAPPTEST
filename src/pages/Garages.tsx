@@ -223,6 +223,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
   return (
     <Modal open={true} onClose={onClose} title={`${garage.garageNo} — ${garage.ownerName}`} width="max-w-xl">
       <div className="space-y-4">
+        <div className="print-details">
         <div className="grid grid-cols-2 gap-4">
           {[
             { label: 'Garage No.', value: garage.garageNo },
@@ -261,6 +262,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             Mark as Paid (₹ {garage.monthlyRent.toLocaleString('en-IN')})
           </button>
         )} */}
+        </div>
       </div>
     </Modal>
   );
