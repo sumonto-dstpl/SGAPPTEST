@@ -357,11 +357,12 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     currentDue: String(currentDue),
   }));
 }, [
+    form.paidRent,
   shop.startDate,
   shop.shopType,
   form.endDate,
   form.monthlyRent,
-    form.paidRent,
+    
 ]);
 
 
