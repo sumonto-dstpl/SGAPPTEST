@@ -27,13 +27,13 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   const [shopType, setShopType] = useState<'Rented' | 'Leased'>('Rented');
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',
+    shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',currentDue: '',
     dueDate: '', startDate: '', endDate: '', shopArea: '',
   });
 
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  // Autofill end date and due date based on start date
+  // // Autofill end date and due date based on start date
   // useEffect(() => {
   //   if (form.startDate) {
   //     const startDate = new Date(form.startDate);
@@ -43,17 +43,105 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
   //     if (shopType === 'Rented') {
   //       // Monthly: end date = one day before same date next month, due date = same date next month
   //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
+  //       dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
   //     } else {
   //       // Yearly: end date = one day before same date next year, due date = same date next year
   //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() );
-  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
+  //       dueDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()+1);
   //     }
 
   //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
   //     setForm(p => ({ ...p, endDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
   //   }
   // }, [form.startDate, shopType]);
+
+const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+useEffect(() => {
+  if (form.startDate) {
+    const startDate = new Date(form.startDate);
+
+    let endDate: Date;
+
+    if (shopType === 'Rented') {
+      endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate() - 1
+      );
+    } else {
+      endDate = new Date(
+        startDate.getFullYear() + 1,
+        startDate.getMonth(),
+        startDate.getDate() - 1
+      );
+    }
+
+    setForm(p => ({
+      ...p,
+      endDate: formatDate(endDate),
+    }));
+  }
+}, [form.startDate, shopType]);
+useEffect(() => {
+  if (form.endDate) {
+    const endDate = new Date(form.endDate);
+
+    const dueDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    );
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.endDate]);
+  useEffect(() => {
+  if (!form.startDate || !form.endDate || !form.monthlyRent) {
+    setForm(p => ({ ...p, currentDue: '' }));
+    return;
+  }
+
+  const [startYear, startMonth, startDay] = form.startDate
+    .split('-')
+    .map(Number);
+
+  const [endYear, endMonth, endDay] = form.endDate
+    .split('-')
+    .map(Number);
+
+  let totalMonths =
+    (endYear - startYear) * 12 +
+    (endMonth - startMonth);
+
+  // Same day or later = next billing month has started
+  if (endDay >= startDay) {
+    totalMonths += 1;
+  }
+
+  // At least 1 month
+  totalMonths = Math.max(1, totalMonths);
+
+  const currentDue = Number(form.monthlyRent) * totalMonths;
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  form.startDate,
+  form.endDate,
+  form.monthlyRent,  
+]);
+
 
   // Reset dates when shop type changes
   useEffect(() => {
@@ -74,12 +162,12 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
       await addShop({
         marketId: market.id, shopName: form.shopName, tenantName: form.tenantName,
         phoneNumber: form.phoneNumber, monthlyRent: Number(form.monthlyRent),
-        paidRent: 0, currentDue: Number(form.monthlyRent), dueDate: form.dueDate,
+        paidRent: 0, currentDue: Number(form.currentDue), dueDate: form.dueDate,
         paymentStatus: 'Due', shopType, startDate: form.startDate, endDate: form.endDate,
         shopArea: form.shopArea.trim() || undefined,
       });
       showSnackbar(`${form.shopName} added successfully`, 'success');
-      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
+      setForm({ shopName: '', tenantName: '', phoneNumber: '', monthlyRent: '',currentDue: '', dueDate: '', startDate: '', endDate: '', shopArea: '' });
       onClose();
     } catch { showSnackbar('Failed to add shop', 'error'); }
     finally { setSaving(false); }
@@ -105,6 +193,7 @@ function AddShopModal({ open, onClose, market }: { open: boolean; onClose: () =>
           { label: 'Tenant Name *',      key: 'tenantName',   placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *',     key: 'phoneNumber',  placeholder: '9876543210' },
           { label: rentLabel,            key: 'monthlyRent',  placeholder: shopType === 'Rented' ? '5000' : '60000', type: 'number' },
+      { label: "Current Due (₹)", key: 'currentDue',  placeholder: '5000', type: 'number' },
           { label: 'Shop Area (sqft)',     key: 'shopArea',     placeholder: 'e.g. 250' },
         ].map(f => (
           <div key={f.key}>
@@ -184,6 +273,98 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     remark: shop.remark ?? '',
   });
 
+  const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+//   useEffect(() => {
+//   if (form.endDate) {
+//     const endDate = new Date(form.endDate);
+
+//     const dueDate = new Date(
+//       endDate.getFullYear(),
+//       endDate.getMonth(),
+//       endDate.getDate() + 1
+//     );
+
+//     setForm(p => ({
+//       ...p,
+//       dueDate: formatDate(dueDate),
+//     }));
+//   }
+// }, [form.endDate]);
+  useEffect(() => {
+  if (form.endDate) {
+    const [year, month, day] = form.endDate.split('-').map(Number);
+
+    const dueDate = new Date(year, month - 1, day + 1);
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.endDate]);
+
+  useEffect(() => {
+  if (!shop.startDate || !form.endDate || !form.monthlyRent) {
+    return;
+  }
+
+  const [startYear, startMonth, startDay] =
+    shop.startDate.split('-').map(Number);
+
+  const [endYear, endMonth, endDay] =
+    form.endDate.split('-').map(Number);
+
+  let totalPeriods: number;
+
+  if (shop.shopType === 'Rented') {
+    // Monthly calculation
+    totalPeriods =
+      (endYear - startYear) * 12 +
+      (endMonth - startMonth);
+
+    // If end date reaches the start day,
+    // another month has started.
+    if (endDay >= startDay) {
+      totalPeriods += 1;
+    }
+  } else {
+    // Yearly calculation for Leased
+    totalPeriods = endYear - startYear;
+
+    // If end date reaches the anniversary date,
+    // another year has started.
+    const reachedAnniversary =
+      endMonth > startMonth ||
+      (endMonth === startMonth && endDay >= startDay);
+
+    if (reachedAnniversary) {
+      totalPeriods += 1;
+    }
+  }
+
+  totalPeriods = Math.max(1, totalPeriods);
+
+  const currentDue = (Number(form.monthlyRent) * totalPeriods)-(Number(form.paidRent) || 0);
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  shop.startDate,
+  shop.shopType,
+  form.endDate,
+  form.monthlyRent,
+    form.paidRent,
+]);
+
+
   const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = async () => {
@@ -195,7 +376,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
     try {
       const statusChangedToPaid = shop.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       const statusChangedToDue = shop.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? shop.currentDue : (Number(form.monthlyRent - shop.monthlyRent) + Number(form.currentDue) || 0);
+      const newCurrentDue= statusChangedToDue ? form.currentDue : statusChangedToPaid ? shop.currentDue : Number(form.currentDue) || 0;
       await updateShop(shop.id, {
         shopName: form.shopName,
         tenantName: form.tenantName,
@@ -230,6 +411,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
           { label: 'Tenant Name *', key: 'tenantName', placeholder: 'Mr. Kumar' },
           { label: 'Phone Number *', key: 'phoneNumber', placeholder: '9876543210' },
           { label: 'Monthly Rent (₹) *', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: "Current Due (₹)", key: 'currentDue',  placeholder: '5000', type: 'number' },
           { label: 'Shop Area (sqft)',     key: 'shopArea',    placeholder: 'e.g. 250' },
           { label: 'Paid Rent (₹)', key: 'paidRent', placeholder: '0', type: 'number' },
         ].map(f => (
@@ -350,23 +532,48 @@ export default function MarketDetail({ market, onBack }: Props) {
   const totalDue   = marketShops.reduce((s, x) => s + x.currentDue, 0);
 
   const handleCollect = async (shop: Shop, amount: number, remark: string) => {
-    const newPaid = shop.paidRent + amount;
-    const newDue = Math.max(0, shop.currentDue - amount);
-    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-    const newPayment: PaymentDate = {
-  amount: amount,
+//     const newPaid = shop.paidRent + amount;
+//     const newDue = Math.max(0, shop.currentDue - amount);
+//     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+//      const paymentRemark =
+//     remark.trim() || (newDue <= 0 ? "Fully Paid" : "Partially Paid");
+//     const newPayment: PaymentDate = {
+//   amount: amount,
+//   paymentDate: new Date().toISOString(),
+//   remark: paymentRemark,
+//     // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid",
+// };
+
+    const currentDue = Number(shop.currentDue) || 0;
+const paymentAmount = Number(amount) || 0;
+const paidRent = Number(shop.paidRent) || 0;
+
+const newPaid = paidRent + paymentAmount;
+const newDue = Math.max(0, currentDue - paymentAmount);
+
+const isFullyPaid = paymentAmount >= currentDue;
+const newStatus = isFullyPaid ? 'Paid' : 'Due';
+
+const paymentRemark =
+  remark.trim() ||
+  (isFullyPaid ? 'Fully Paid' : 'Partially Paid');
+
+const newPayment: PaymentDate = {
+  amount: paymentAmount,
   paymentDate: new Date().toISOString(),
-  remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",
+  remark: paymentRemark,
 };
+
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
     newPayment,
-  ], remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid", });
+  ], remark: paymentRemark,});
+      // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid", 
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
       type: 'Shop',
-      amount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
