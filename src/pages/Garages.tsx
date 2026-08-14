@@ -450,14 +450,33 @@ export default function Garages() {
   const [collectGarage, setCollectGarage] = useState<Garage | null>(null);
 
   const handleCollect = async (garage: Garage, amount: number, remark: string) => {
-    const newPaid = (garage.paidRent ?? 0) + amount;
-    const newDue = Math.max(0, garage.currentDue - amount);
-    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-     const newPayment: PaymentDate = {
-  amount: amount,
+//     const newPaid = (garage.paidRent ?? 0) + amount;
+//     const newDue = Math.max(0, garage.currentDue - amount);
+//     const newStatus = newDue <= 0 ? 'Paid' : 'Due';
+//      const newPayment: PaymentDate = {
+//   amount: amount,
+//   paymentDate: new Date().toISOString(),
+//  remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",
+// };    
+      const currentDue = Number(garage.currentDue) || 0;
+const paymentAmount = Number(amount) || 0;
+const paidRent = Number(garage.paidRent) || 0;
+
+const newPaid = paidRent + paymentAmount;
+const newDue = Math.max(0, currentDue - paymentAmount);
+
+const isFullyPaid = paymentAmount >= currentDue;
+const newStatus = isFullyPaid ? 'Paid' : 'Due';
+
+const paymentRemark =
+  remark.trim() ||
+  (isFullyPaid ? 'Fully Paid' : 'Partially Paid');
+
+const newPayment: PaymentDate = {
+  amount: paymentAmount,
   paymentDate: new Date().toISOString(),
- remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid",
-};    
+  remark: paymentRemark,
+};
     await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(garage.payments || []),
     newPayment,
