@@ -25,3 +25,37 @@ input[type="password"]::-ms-reveal {
 input[type="password"]::-ms-clear {
   display: none;
 }
+
+@media print {
+  @page {
+    margin: 10mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the details you want to print */
+  .print-details,
+  .print-details * {
+    visibility: visible;
+  }
+
+  .print-details {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Don't print the print button */
+  .print-button {
+    display: none !important;
+  }
+}
