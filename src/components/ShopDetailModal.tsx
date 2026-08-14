@@ -80,19 +80,33 @@ const newPayment: PaymentDate = {
   paymentDate: new Date().toISOString(),
   remark: paymentRemark,
 };
-    await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+
+     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
     newPayment,
-  ], remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid", });
-    // await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString() });
+  ], remark: paymentRemark,});
+      // remark || shop.currentDue===amount ? "Fully Paid" : "Partially Paid", 
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
       type: 'Shop',
-      amount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
-      remark: remark || undefined,
+      remark: remark || "",
     });
+  //   await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
+  //   ...(shop.payments || []),
+  //   newPayment,
+  // ], remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid", });
+  //   // await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, paymentDate: new Date().toISOString() });
+  //   await addPayment({
+  //     date: new Date().toISOString().split('T')[0],
+  //     name: `${shop.tenantName} (${shop.shopName})`,
+  //     type: 'Shop',
+  //     amount,
+  //     reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
+  //     remark: remark || undefined,
+  //   });
     showSnackbar(
       `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
       'success',
