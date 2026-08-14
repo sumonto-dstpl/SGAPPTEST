@@ -95,7 +95,7 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
       amount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || undefined,
-  //   });
+    });
     showSnackbar(
       `₹${amount.toLocaleString('en-IN')} collected from ${shop.shopName}${newStatus === 'Due' ? ` (Part payment — ₹${newDue.toLocaleString('en-IN')} remaining)` : ''}`,
       'success',
