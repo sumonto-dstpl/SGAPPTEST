@@ -61,13 +61,24 @@ export default function ShopDetailModal({ shop, onClose }: Props) {
   const [showCollect, setShowCollect] = useState(false);
 
   const handleCollect = async (amount: number, remark: string) => {
-    const newPaid = shop.paidRent + amount;
-    const newDue = Math.max(0, shop.currentDue - amount);
-    const newStatus = newDue <= 0 ? 'Paid' : 'Due';
-      const newPayment: PaymentDate = {
-  amount: amount,
+    const currentDue = Number(shop.currentDue) || 0;
+const paymentAmount = Number(amount) || 0;
+const paidRent = Number(shop.paidRent) || 0;
+
+const newPaid = paidRent + paymentAmount;
+const newDue = Math.max(0, currentDue - paymentAmount);
+
+const isFullyPaid = paymentAmount >= currentDue;
+const newStatus = isFullyPaid ? 'Paid' : 'Due';
+
+const paymentRemark =
+  remark.trim() ||
+  (isFullyPaid ? 'Fully Paid' : 'Partially Paid');
+
+const newPayment: PaymentDate = {
+  amount: paymentAmount,
   paymentDate: new Date().toISOString(),
- remark: remark || shop.currentDue==amount ? "Fully Paid" : "Partially Paid",
+  remark: paymentRemark,
 };
     await updateShop(shop.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(shop.payments || []),
