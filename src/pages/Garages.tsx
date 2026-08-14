@@ -480,12 +480,12 @@ const newPayment: PaymentDate = {
     await updateGarage(garage.id, { paidRent: newPaid, currentDue: newDue, paymentStatus: newStatus, payments: [
     ...(garage.payments || []),
     newPayment,
-  ], remark: remark || garage.currentDue==amount ? "Fully Paid" : "Partially Paid", });
+  ], remark:paymentRemark, });
     await addPayment({
       date: new Date().toISOString().split('T')[0],
       name: `${garage.ownerName} (${garage.garageNo})`,
       type: 'Garage',
-      amount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
