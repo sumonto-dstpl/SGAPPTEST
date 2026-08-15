@@ -177,26 +177,26 @@ useEffect(() => {
   // }, [form.startDate, form.leaseType]);
 
   // Reset dates when lease type changes
-  useEffect(() => {
-    if (form.leaseType === 'Long-term') {
-      setForm(p => ({ ...p, leaseEndDate: '', dueDate: '' }));
-    } else if (form.startDate) {
-      const startDate = new Date(form.startDate);
-      let endDate: Date;
-      let dueDate: Date;
+  // useEffect(() => {
+  //   if (form.leaseType === 'Long-term') {
+  //     setForm(p => ({ ...p, leaseEndDate: '', dueDate: '' }));
+  //   } else if (form.startDate) {
+  //     const startDate = new Date(form.startDate);
+  //     let endDate: Date;
+  //     let dueDate: Date;
 
-      if (form.leaseType === 'Monthly') {
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-      } else {
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
-      }
+  //     if (form.leaseType === 'Monthly') {
+  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
+  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+  //     } else {
+  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
+  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+  //     }
 
-      const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
-    }
-  }, [form.leaseType]);
+  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  //     setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //   }
+  // }, [form.leaseType]);
 
   // Keep garageNo in sync with default when modal reopens
   useEffect(() => { if (open) setGarageNo(nextNo); }, [open]);
