@@ -70,7 +70,7 @@ export default function Backup() {
 
   const [backupName, setBackupName] = useState('');
   const [description, setDescription] = useState('');
-  const [backupType, setBackupType] = useState<'Full Backup' | 'Incremental'>('Full Backup');
+  const [backupType, setBackupType] = useState<'Full Backup'>('Full Backup');
   const [creating, setCreating] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [page, setPage] = useState(1);
@@ -357,7 +357,7 @@ export default function Backup() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Backup Type</label>
               <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                {(['Full Backup', 'Incremental'] as const).map(t => (
+                {(['Full Backup'] as const).map(t => (
                   <button key={t} onClick={() => setBackupType(t)}
                     className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${backupType === t ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}>
                     {t}
