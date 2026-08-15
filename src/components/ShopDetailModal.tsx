@@ -90,7 +90,7 @@ const newPayment: PaymentDate = {
       date: new Date().toISOString().split('T')[0],
       name: `${shop.tenantName} (${shop.shopName})`,
       type: 'Shop',
-      amount: paymentAmount,
+      paymentAmount,
       reference: `COLL-${Date.now().toString(36).toUpperCase()}`,
       remark: remark || "",
     });
