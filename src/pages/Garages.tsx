@@ -99,6 +99,62 @@ useEffect(() => {
     }));
   }
 }, [form.startDate]);
+  useEffect(() => {
+  if (form.endDate) {
+    const endDate = new Date(form.endDate);
+
+    const dueDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    );
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.endDate]);
+  useEffect(() => {
+  if (!form.startDate || !form.endDate || !form.monthlyRent) {
+    setForm(p => ({ ...p, currentDue: '' }));
+    return;
+  }
+
+  const [startYear, startMonth, startDay] = form.startDate
+    .split('-')
+    .map(Number);
+
+  const [endYear, endMonth, endDay] = form.endDate
+    .split('-')
+    .map(Number);
+
+  let totalMonths =
+    (endYear - startYear) * 12 +
+    (endMonth - startMonth);
+
+  // Same day or later = next billing month has started
+  if (endDay >= startDay) {
+    totalMonths += 1;
+  }
+
+  // At least 1 month
+  totalMonths = Math.max(1, totalMonths);
+
+    const totalYears = Math.ceil(totalMonths / 12);
+
+  const currentDue = Number(form.monthlyRent) * totalMonths;
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  form.startDate,
+  form.endDate,
+  form.monthlyRent,  
+]);
+
   
   // useEffect(() => {
   //   if (form.startDate && form.leaseType !== 'Long-term') {
