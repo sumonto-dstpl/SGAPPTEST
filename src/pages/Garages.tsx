@@ -7,6 +7,11 @@ import CollectPaymentModal from '../components/CollectPaymentModal';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
 const ITEMS_PER_PAGE = 10;
+function fmtDate(s: string) {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  catch { return s; }
+}
 
 function PaymentRows({ payments }: { payments?: PaymentDate[] }) {
   return (
@@ -131,6 +136,8 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
     } catch { showSnackbar('Failed to add garage', 'error'); }
     finally { setSaving(false); }
   };
+
+  
 
   return (
     <Modal open={open} onClose={onClose} title="Add New Garage">
