@@ -538,19 +538,19 @@ useEffect(() => {
 }, [form.leaseEndDate]);
 
   useEffect(() => {
-  if (!shop.startDate || !form.leaseEndDate || !form.monthlyRent) {
+  if (!garage.startDate || !form.leaseEndDate || !form.monthlyRent) {
     return;
   }
 
   const [startYear, startMonth, startDay] =
-    shop.startDate.split('-').map(Number);
+    garage.startDate.split('-').map(Number);
 
   const [endYear, endMonth, endDay] =
     form.leaseEndDate.split('-').map(Number);
 
   let totalPeriods: number;
 
-  if (shop.shopType === 'Rented') {
+  // if (shop.shopType === 'Rented') {
     // Monthly calculation
     totalPeriods =
       (endYear - startYear) * 12 +
@@ -561,20 +561,20 @@ useEffect(() => {
     if (endDay >= startDay) {
       totalPeriods += 1;
     }
-  } else {
-    // Yearly calculation for Leased
-    totalPeriods = endYear - startYear;
+  // } else {
+  //   // Yearly calculation for Leased
+  //   totalPeriods = endYear - startYear;
 
-    // If end date reaches the anniversary date,
-    // another year has started.
-    const reachedAnniversary =
-      endMonth > startMonth ||
-      (endMonth === startMonth && endDay >= startDay);
+  //   // If end date reaches the anniversary date,
+  //   // another year has started.
+  //   const reachedAnniversary =
+  //     endMonth > startMonth ||
+  //     (endMonth === startMonth && endDay >= startDay);
 
-    if (reachedAnniversary) {
-      totalPeriods += 1;
-    }
-  }
+  //   if (reachedAnniversary) {
+  //     totalPeriods += 1;
+  //   }
+  // }
 
   totalPeriods = Math.max(1, totalPeriods);
     // const totalYears = Math.ceil(totalPeriods/12);
@@ -586,8 +586,8 @@ useEffect(() => {
     currentDue: String(currentDue),
   }));
 }, [
-  shop.startDate,
-  shop.shopType,
+  garage.startDate,
+  garage.shopType,
   form.leaseEndDate,
   form.monthlyRent,
     form.paidRent,
