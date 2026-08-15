@@ -242,8 +242,8 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             { label: 'Paid Rent', value: `₹ ${(garage.paidRent ?? 0).toLocaleString('en-IN')}` },
             { label: 'Current Due', value: `₹ ${garage.currentDue.toLocaleString('en-IN')}` },
             { label: 'Lease Type', value: garage.leaseType },
-            { label: 'Start Date', value: garage.startDate },
-            { label: 'Lease End Date', value: garage.leaseEndDate },
+            { label: 'Start Date', value: fmtDate(garage.startDate) },
+            { label: 'Lease End Date', value: fmtDate(garage.leaseEndDate) },
             { label: 'Remark', value: garage.remark || '—' },           
           ].map(f => (
             <div key={f.label}>
