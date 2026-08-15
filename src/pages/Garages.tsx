@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useData } from '../store/DataContext';
 import { Garage, PaymentDate } from '../types';
 import Modal from '../components/Modal';
@@ -57,54 +59,143 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   const { showSnackbar } = useSnackbar();
   const [form, setForm] = useState({
     ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car',
-    monthlyRent: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '',
+    monthlyRent: '',currentDue: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '',
   });
 
   const nextNo = `G-${String(garages.length + 1).padStart(2, '0')}`;
   const [garageNo, setGarageNo] = useState(nextNo);
 
   // Autofill end date based on lease type and start date
+  // useEffect(() => {
+  //   if (form.startDate && form.leaseType !== 'Long-term') {
+  //     const startDate = new Date(form.startDate);
+  //     let endDate: Date;
+  //     let dueDate: Date;
+
+  //     if (form.leaseType === 'Monthly') {
+  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
+  //     } else {
+  //       // Yearly
+  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
+  //     }
+
+  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  //     setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //   }
+  // }, [form.startDate, form.leaseType]);
+
+  // // Reset dates when lease type changes
+  // useEffect(() => {
+  //   if (form.leaseType === 'Long-term') {
+  //     setForm(p => ({ ...p, leaseEndDate: '', dueDate: '' }));
+  //   } else if (form.startDate) {
+  //     const startDate = new Date(form.startDate);
+  //     let endDate: Date;
+  //     let dueDate: Date;
+
+  //     if (form.leaseType === 'Monthly') {
+  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
+  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+  //     } else {
+  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
+  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+  //     }
+
+  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  //     setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //   }
+  // }, [form.leaseType]);
+
+  const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+useEffect(() => {
+  if (form.startDate) {
+    const startDate = new Date(form.startDate);
+
+    let endDate: Date;
+
+    // if (shopType === 'Rented') {
+      endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate() - 1
+      );
+    // } else {
+    //   endDate = new Date(
+    //     startDate.getFullYear() + 1,
+    //     startDate.getMonth(),
+    //     startDate.getDate() - 1
+    //   );
+    // }
+
+    setForm(p => ({
+      ...p,
+      leaseEndDate: formatDate(endDate),
+    }));
+  }
+}, [form.startDate]);
+useEffect(() => {
+  if (form.leaseEndDate) {
+    const endDate = new Date(form.leaseEndDate);
+
+    const dueDate = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1
+    );
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.leaseEndDate]);
   useEffect(() => {
-    if (form.startDate && form.leaseType !== 'Long-term') {
-      const startDate = new Date(form.startDate);
-      let endDate: Date;
-      let dueDate: Date;
+  if (!form.startDate || !form.leaseEndDate || !form.monthlyRent) {
+    setForm(p => ({ ...p, currentDue: '' }));
+    return;
+  }
 
-      if (form.leaseType === 'Monthly') {
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
-      } else {
-        // Yearly
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
-      }
+  const [startYear, startMonth, startDay] = form.startDate
+    .split('-')
+    .map(Number);
 
-      const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
-    }
-  }, [form.startDate, form.leaseType]);
+  const [endYear, endMonth, endDay] = form.leaseEndDate
+    .split('-')
+    .map(Number);
 
-  // Reset dates when lease type changes
-  useEffect(() => {
-    if (form.leaseType === 'Long-term') {
-      setForm(p => ({ ...p, leaseEndDate: '', dueDate: '' }));
-    } else if (form.startDate) {
-      const startDate = new Date(form.startDate);
-      let endDate: Date;
-      let dueDate: Date;
+  let totalMonths =
+    (endYear - startYear) * 12 +
+    (endMonth - startMonth);
 
-      if (form.leaseType === 'Monthly') {
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-      } else {
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate() - 1);
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
-      }
+  // Same day or later = next billing month has started
+  if (endDay >= startDay) {
+    totalMonths += 1;
+  }
 
-      const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
-    }
-  }, [form.leaseType]);
+  // At least 1 month
+  totalMonths = Math.max(1, totalMonths);
+
+    const totalYears = Math.ceil(totalMonths / 12);
+
+  const currentDue = Number(form.monthlyRent) * totalMonths;
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  form.startDate,
+  form.leaseEndDate,
+  form.monthlyRent,  
+]);
 
   // Keep garageNo in sync with default when modal reopens
   useEffect(() => { if (open) setGarageNo(nextNo); }, [open]);
@@ -126,12 +217,12 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
         ownerName: form.ownerName, mobileNumber: form.mobileNumber, vehicleNumber: form.vehicleNumber,
         vehicleType: form.vehicleType as Garage['vehicleType'],
         monthlyRent: Number(form.monthlyRent), paidRent: 0, paymentStatus: 'Due',
-        currentDue: Number(form.monthlyRent),
+        currentDue: Number(form.currentDue),
         leaseEndDate: form.leaseEndDate, leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate, dueDate: form.dueDate,
       });
       showSnackbar(`${garageNo.trim()} added successfully`, 'success');
-      setForm({ ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car', monthlyRent: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '' });
+      setForm({ ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car', monthlyRent: '', currentDue: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '' });
       onClose();
     } catch { showSnackbar('Failed to add garage', 'error'); }
     finally { setSaving(false); }
@@ -158,6 +249,8 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
           { label: 'Mobile Number', key: 'mobileNumber', placeholder: '9876543210' },
           { label: 'Vehicle Number', key: 'vehicleNumber', placeholder: 'WB 02 AB 1234' },
           { label: 'Monthly Rent (₹)', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: 'Current Due (₹)', key: 'currentDue', placeholder: '5000', type: 'number' },
+      
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
@@ -176,13 +269,13 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
             {['Car', 'Bike', 'Truck', 'Other'].map(v => <option key={v}>{v}</option>)}
           </select>
         </div>
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Lease Type</label>
           <select value={form.leaseType} onChange={e => setForm(p => ({ ...p, leaseType: e.target.value }))}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
             {['Monthly', 'Yearly', 'Long-term'].map(v => <option key={v}>{v}</option>)}
           </select>
-        </div>
+        </div> */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
           <input
@@ -193,17 +286,16 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date {form.leaseType === 'Long-term' && '*'}</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">End Date </label>
           <input
             type="date"
             value={form.leaseEndDate}
             onChange={e => setForm(p => ({ ...p, leaseEndDate: e.target.value }))}
-            readOnly={form.leaseType !== 'Long-term'}
-            className={`w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${form.leaseType !== 'Long-term' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50'}`}
+            className={`w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50`}
           />
-          {form.leaseType !== 'Long-term' && (
+          {/* {form.leaseType !== 'Long-term' && (
             <p className="text-xs text-gray-400 mt-1">Auto-calculated based on lease type</p>
-          )}
+          )} */}
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -218,6 +310,134 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
 function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () => void }) {
   const { updateGarage } = useData();
   const { showSnackbar } = useSnackbar();
+
+  const handleDownloadPDF = () => {
+  const doc = new jsPDF();
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Garage Details', pageWidth / 2, 18, { align: 'center' });
+
+  // Garage number + owner + status
+  doc.setFontSize(13);
+  doc.text(
+    `${garage.garageNo || 'Garage'} — ${garage.ownerName || ''}`,
+    14,
+    30
+  );
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Payment Status: ${garage.paymentStatus}`, 14, 37);
+
+  // Garage details
+  autoTable(doc, {
+    startY: 44,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [243, 244, 246],
+      textColor: [31, 41, 55],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 55 },
+      1: { cellWidth: 125 },
+    },
+    body: [
+      ['Garage No.', garage.garageNo || '—'],
+      ['Owner Name', garage.ownerName || '—'],
+      ['Mobile Number', String(garage.mobileNumber || '—')],
+      ['Vehicle Number', garage.vehicleNumber || '—'],
+      ['Vehicle Type', garage.vehicleType || '—'],
+      ['Monthly Rent', `INR ${Number(garage.monthlyRent || 0).toLocaleString('en-IN')}`],
+      ['Paid Rent', `INR ${Number(garage.paidRent || 0).toLocaleString('en-IN')}`],
+      ['Current Due', `INR ${Number(garage.currentDue || 0).toLocaleString('en-IN')}`],
+      ['Start Date', fmtDate(garage.startDate)],
+      ['Lease End Date', fmtDate(garage.leaseEndDate)],
+      ['Remark', garage.remark || '—'],
+    ],
+  });
+
+  // Payment history
+  const paymentStartY =
+    (doc as any).lastAutoTable.finalY + 10;
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Payment History', 14, paymentStartY);
+
+  const paymentRows = (garage.payments || []).map((payment) => {
+    const paymentDate = new Date(payment.paymentDate);
+
+    return [
+      `INR ${Number(payment.amount || 0).toLocaleString('en-IN')}`,
+      paymentDate.toLocaleString('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+      payment.remark || '—',
+    ];
+  });
+
+  autoTable(doc, {
+    startY: paymentStartY + 5,
+    head: [['Amount', 'Payment Date', 'Remark']],
+    body: paymentRows.length
+      ? paymentRows
+      : [['—', '—', 'No payments']],
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+      valign: 'middle',
+    },
+    headStyles: {
+      fillColor: [243, 244, 246],
+      textColor: [17, 24, 39],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 65 },
+      2: { cellWidth: 75 },
+    },
+
+    // Automatically repeat table header on every page
+    showHead: 'everyPage',
+  });
+
+  // Footer on every page
+  const pageCount = doc.getNumberOfPages();
+
+  for (let page = 1; page <= pageCount; page++) {
+    doc.setPage(page);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+
+    doc.text(
+      `Page ${page} of ${pageCount}`,
+      pageWidth - 14,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'right' }
+    );
+  }
+
+  // Download PDF
+  const safeGarageName = (garage.garageNo || 'garage')
+    .replace(/[^a-z0-9]/gi, '_');
+
+  doc.save(`${safeGarageName}_details.pdf`);
+};
+
 
   const handlePayment = async () => {
     try {
@@ -241,7 +461,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
             { label: 'Monthly Rent', value: `₹ ${garage.monthlyRent.toLocaleString('en-IN')}` },
             { label: 'Paid Rent', value: `₹ ${(garage.paidRent ?? 0).toLocaleString('en-IN')}` },
             { label: 'Current Due', value: `₹ ${garage.currentDue.toLocaleString('en-IN')}` },
-            { label: 'Lease Type', value: garage.leaseType },
+            // { label: 'Lease Type', value: garage.leaseType },
             { label: 'Start Date', value: fmtDate(garage.startDate) },
             { label: 'Lease End Date', value: fmtDate(garage.leaseEndDate) },
             { label: 'Remark', value: garage.remark || '—' },           
@@ -264,7 +484,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
         </div>
      <div className="no-print">
       <button
-        onClick={() => window.print()}
+        onClick={handleDownloadPDF}
         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
       >
         <Printer size={16} />
@@ -301,6 +521,82 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     // paymentDate: garage.paymentDate ?? '',
     remark: garage.remark ?? '',
   });
+   const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+   useEffect(() => {
+  if (form.leaseEndDate) {
+    const [year, month, day] = form.leaseEndDate.split('-').map(Number);
+
+    const dueDate = new Date(year, month - 1, day + 1);
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.leaseEndDate]);
+
+  useEffect(() => {
+  if (!garage.startDate || !form.leaseEndDate || !form.monthlyRent) {
+    return;
+  }
+
+  const [startYear, startMonth, startDay] =
+    garage.startDate.split('-').map(Number);
+
+  const [endYear, endMonth, endDay] =
+    form.leaseEndDate.split('-').map(Number);
+
+  let totalPeriods: number;
+
+  // if (shop.shopType === 'Rented') {
+    // Monthly calculation
+    totalPeriods =
+      (endYear - startYear) * 12 +
+      (endMonth - startMonth);
+
+    // If end date reaches the start day,
+    // another month has started.
+    if (endDay >= startDay) {
+      totalPeriods += 1;
+    }
+  // } else {
+  //   // Yearly calculation for Leased
+  //   totalPeriods = endYear - startYear;
+
+  //   // If end date reaches the anniversary date,
+  //   // another year has started.
+  //   const reachedAnniversary =
+  //     endMonth > startMonth ||
+  //     (endMonth === startMonth && endDay >= startDay);
+
+  //   if (reachedAnniversary) {
+  //     totalPeriods += 1;
+  //   }
+  // }
+
+  totalPeriods = Math.max(1, totalPeriods);
+    // const totalYears = Math.ceil(totalPeriods/12);
+
+  const currentDue = (Number(form.monthlyRent) * totalPeriods)-(Number(form.paidRent) || 0);
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  garage.startDate,
+  // garage.shopType,
+  form.leaseEndDate,
+  form.monthlyRent,
+    form.paidRent,
+]);
   const [saving, setSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -318,7 +614,9 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     try {
       const statusChangedToPaid = garage.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       const statusChangedToDue = garage.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.monthlyRent - garage.monthlyRent) + Number(form.currentDue) || 0);
+      // const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.monthlyRent - garage.monthlyRent) + Number(form.currentDue) || 0);
+      const newCurrentDue= statusChangedToDue ? form.currentDue : statusChangedToPaid ? garage.currentDue : Number(form.currentDue) || 0;
+      
       await updateGarage(garage.id, {
         garageNo: form.garageNo.trim(),
         ownerName: form.ownerName.trim(),
@@ -404,14 +702,16 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
           </div>
           <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" value={form.monthlyRent}
   onChange={(value) => set("monthlyRent", value)}/>
+          <Field label="Current Due (₹)" name="currentDue" type="number" value={form.currentDue}
+  onChange={(value) => set("currentDue", value)}/>
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
-          <div>
+          {/* <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
             <select value={form.leaseType} onChange={e => set('leaseType', e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
               {['Monthly', 'Quarterly', 'Annual'].map(v => <option key={v}>{v}</option>)}
             </select>
-          </div>
+          </div> */}
           <Field label="Start Date" name="startDate" type="date" value={form.startDate}
   onChange={(value) => set("startDate", value)}/>
           <Field label="Lease End Date" name="leaseEndDate" type="date" value={form.leaseEndDate}
