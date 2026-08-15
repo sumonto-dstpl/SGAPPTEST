@@ -587,7 +587,7 @@ useEffect(() => {
   }));
 }, [
   garage.startDate,
-  garage.shopType,
+  // garage.shopType,
   form.leaseEndDate,
   form.monthlyRent,
     form.paidRent,
