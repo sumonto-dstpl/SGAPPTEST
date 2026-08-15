@@ -513,6 +513,13 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     // paymentDate: garage.paymentDate ?? '',
     remark: garage.remark ?? '',
   });
+  const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
   const [saving, setSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
