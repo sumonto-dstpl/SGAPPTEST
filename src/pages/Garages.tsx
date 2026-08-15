@@ -593,7 +593,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
 }, [
   garage.startDate,
   // garage.shopType,
-  form.endDate,
+  form.leaseEndDate,
   form.monthlyRent,
     form.paidRent,
 ]);
