@@ -247,6 +247,8 @@ useEffect(() => {
           { label: 'Mobile Number', key: 'mobileNumber', placeholder: '9876543210' },
           { label: 'Vehicle Number', key: 'vehicleNumber', placeholder: 'WB 02 AB 1234' },
           { label: 'Monthly Rent (₹)', key: 'monthlyRent', placeholder: '5000', type: 'number' },
+          { label: 'Current Due (₹)', key: 'currentDue', placeholder: '5000', type: 'number' },
+      
         ].map(f => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
