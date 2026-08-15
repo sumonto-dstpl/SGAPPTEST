@@ -524,6 +524,76 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+useEffect(() => {
+  if (form.leaseEndDate) {
+    const [year, month, day] = form.endDate.split('-').map(Number);
+
+    const dueDate = new Date(year, month - 1, day + 1);
+
+    setForm(p => ({
+      ...p,
+      dueDate: formatDate(dueDate),
+    }));
+  }
+}, [form.leaseEndDate]);
+
+  useEffect(() => {
+  if (!shop.startDate || !form.leaseEndDate || !form.monthlyRent) {
+    return;
+  }
+
+  const [startYear, startMonth, startDay] =
+    shop.startDate.split('-').map(Number);
+
+  const [endYear, endMonth, endDay] =
+    form.leaseEndDate.split('-').map(Number);
+
+  let totalPeriods: number;
+
+  if (shop.shopType === 'Rented') {
+    // Monthly calculation
+    totalPeriods =
+      (endYear - startYear) * 12 +
+      (endMonth - startMonth);
+
+    // If end date reaches the start day,
+    // another month has started.
+    if (endDay >= startDay) {
+      totalPeriods += 1;
+    }
+  } else {
+    // Yearly calculation for Leased
+    totalPeriods = endYear - startYear;
+
+    // If end date reaches the anniversary date,
+    // another year has started.
+    const reachedAnniversary =
+      endMonth > startMonth ||
+      (endMonth === startMonth && endDay >= startDay);
+
+    if (reachedAnniversary) {
+      totalPeriods += 1;
+    }
+  }
+
+  totalPeriods = Math.max(1, totalPeriods);
+    // const totalYears = Math.ceil(totalPeriods/12);
+
+  const currentDue = (Number(form.monthlyRent) * totalPeriods)-(Number(form.paidRent) || 0);
+
+  setForm(p => ({
+    ...p,
+    currentDue: String(currentDue),
+  }));
+}, [
+  shop.startDate,
+  shop.shopType,
+  form.leaseEndDate,
+  form.monthlyRent,
+    form.paidRent,
+]);
+
+  
   const handleSave = async () => {
     if (!form.garageNo.trim() || !form.ownerName.trim()) {
       showSnackbar('Garage No. and Owner Name are required', 'warning');
