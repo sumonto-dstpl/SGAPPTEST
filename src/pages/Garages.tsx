@@ -286,7 +286,7 @@ useEffect(() => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date {form.leaseType === 'Long-term' && '*'}</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
           <input
             type="date"
             value={form.leaseEndDate}
