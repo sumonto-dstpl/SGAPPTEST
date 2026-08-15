@@ -634,7 +634,7 @@ const handleMenuClick = (e, garageId) => {
                 <td className="px-4 py-4 text-gray-700">₹ {garage.monthlyRent.toLocaleString('en-IN')}</td>
                 <td className="px-4 py-4 text-gray-700">₹ {(garage.paidRent ?? 0).toLocaleString('en-IN')}</td>
                 <td className="px-4 py-4 text-gray-700">₹ {garage.currentDue.toLocaleString('en-IN')}</td>
-                <td className="px-4 py-4 text-gray-600">{garage.leaseEndDate || '—'}</td>
+                <td className="px-4 py-4 text-gray-600">{fmtDate(garage.leaseEndDate) || '—'}</td>
                 <td className="px-4 py-4">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${garage.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${garage.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-red-500'}`} />
