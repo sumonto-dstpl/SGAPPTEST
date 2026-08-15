@@ -101,7 +101,7 @@ useEffect(() => {
 }, [form.startDate]);
   useEffect(() => {
   if (form.endDate) {
-    const endDate = new Date(form.endDate);
+    const endDate = new Date(form.leaseEndDate);
 
     const dueDate = new Date(
       endDate.getFullYear(),
