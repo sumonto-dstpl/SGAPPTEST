@@ -151,7 +151,7 @@ useEffect(() => {
   }));
 }, [
   form.startDate,
-  form.endDate,
+  form.leaseEndDate,
   form.monthlyRent,  
 ]);
 
