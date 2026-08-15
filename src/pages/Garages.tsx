@@ -218,7 +218,7 @@ useEffect(() => {
         ownerName: form.ownerName, mobileNumber: form.mobileNumber, vehicleNumber: form.vehicleNumber,
         vehicleType: form.vehicleType as Garage['vehicleType'],
         monthlyRent: Number(form.monthlyRent), paidRent: 0, paymentStatus: 'Due',
-        currentDue: Number(form.monthlyRent),
+        currentDue: Number(form.currentDue),
         leaseEndDate: form.leaseEndDate, leaseType: form.leaseType as Garage['leaseType'],
         startDate: form.startDate, dueDate: form.dueDate,
       });
