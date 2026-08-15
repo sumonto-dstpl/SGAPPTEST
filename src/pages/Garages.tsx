@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useData } from '../store/DataContext';
 import { Garage, PaymentDate } from '../types';
 import Modal from '../components/Modal';
@@ -226,6 +228,128 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
       onClose();
     } catch { showSnackbar('Failed to update payment status', 'error'); }
   };
+
+  const handleDownloadPDF = () => {
+  const doc = new jsPDF();
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Garage Details', pageWidth / 2, 18, { align: 'center' });
+
+  // Garage number + status
+  doc.setFontSize(13);
+  doc.text(garage.garageNo || 'Garage', 14, 30);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Payment Status: ${garage.paymentStatus}`, 14, 37);
+
+  // Garage details
+  autoTable(doc, {
+    startY: 44,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [243, 244, 246],
+      textColor: [31, 41, 55],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 55 },
+      1: { cellWidth: 125 },
+    },
+    body: [
+      ['Garage No.', garage.garageNo || '—'],
+      ['Owner Name', garage.ownerName || '—'],
+      ['Mobile Number', String(garage.mobileNumber || '—')],
+      ['Vehicle Number', garage.vehicleNumber || '—'],
+      ['Vehicle Type', garage.vehicleType || '—'],
+      ['Monthly Rent', `INR ${Number(garage.monthlyRent || 0).toLocaleString('en-IN')}`],
+      ['Paid Rent', `INR ${Number(garage.paidRent || 0).toLocaleString('en-IN')}`],
+      ['Current Due', `INR ${Number(garage.currentDue || 0).toLocaleString('en-IN')}`],
+      ['Lease Type', garage.leaseType || '—'],
+      ['Start Date', fmtDate(garage.startDate)],
+      ['Lease End Date', fmtDate(garage.leaseEndDate)],
+      ['Remark', garage.remark || '—'],
+    ],
+  });
+
+  // Payment history
+  const paymentStartY =
+    (doc as any).lastAutoTable.finalY + 10;
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Payment History', 14, paymentStartY);
+
+  const paymentRows = (garage.payments || []).map((payment) => {
+    const paymentDate = new Date(payment.paymentDate);
+
+    return [
+      `INR ${Number(payment.amount || 0).toLocaleString('en-IN')}`,
+      paymentDate.toLocaleString('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+      payment.remark || '—',
+    ];
+  });
+
+  autoTable(doc, {
+    startY: paymentStartY + 5,
+    head: [['Amount', 'Payment Date', 'Remark']],
+    body: paymentRows.length
+      ? paymentRows
+      : [['—', '—', 'No payments']],
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+      valign: 'middle',
+    },
+    headStyles: {
+      fillColor: [243, 244, 246],
+      textColor: [17, 24, 39],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 65 },
+      2: { cellWidth: 75 },
+    },
+    showHead: 'everyPage',
+  });
+
+  // Footer on every page
+  const pageCount = doc.getNumberOfPages();
+
+  for (let page = 1; page <= pageCount; page++) {
+    doc.setPage(page);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+
+    doc.text(
+      `Page ${page} of ${pageCount}`,
+      pageWidth - 14,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'right' }
+    );
+  }
+
+  // Download PDF
+  const safeGarageNo = (garage.garageNo || 'garage')
+    .replace(/[^a-z0-9]/gi, '_');
+
+  doc.save(`${safeGarageNo}_details.pdf`);
+};
 
   return (
     <Modal open={true} onClose={onClose} title={`${garage.garageNo} — ${garage.ownerName}`} width="max-w-xl">
