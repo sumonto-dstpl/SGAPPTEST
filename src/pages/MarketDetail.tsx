@@ -130,7 +130,9 @@ useEffect(() => {
   // At least 1 month
   totalMonths = Math.max(1, totalMonths);
 
-  const currentDue = Number(form.monthlyRent) * totalMonths;
+    const totalYears = Math.ceil(totalMonths / 12);
+
+  const currentDue = Number(form.monthlyRent) * (shopType === 'Rented' ? totalMonths : totalYears);
 
   setForm(p => ({
     ...p,
