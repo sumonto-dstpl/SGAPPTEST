@@ -59,7 +59,7 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   const { showSnackbar } = useSnackbar();
   const [form, setForm] = useState({
     ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car',
-    monthlyRent: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '',
+    monthlyRent: '',currentDue: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '',
   });
 
   const nextNo = `G-${String(garages.length + 1).padStart(2, '0')}`;
