@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Car, IndianRupee, Wallet, FileWarning, X, ChevronLeft, ChevronRight, Banknote, MoreHorizontal, Eye, Pencil, Printer } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useData } from '../store/DataContext';
 import { Garage, PaymentDate } from '../types';
 import Modal from '../components/Modal';
@@ -354,7 +356,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
         </div>
      <div className="no-print">
       <button
-        onClick={() => window.print()}
+        onClick={handleDownloadPDF}
         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
       >
         <Printer size={16} />
