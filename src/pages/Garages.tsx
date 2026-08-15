@@ -607,7 +607,9 @@ useEffect(() => {
     try {
       const statusChangedToPaid = garage.paymentStatus === 'Due' && form.paymentStatus === 'Paid';
       const statusChangedToDue = garage.paymentStatus === 'Paid' && form.paymentStatus === 'Due';
-      const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.monthlyRent - garage.monthlyRent) + Number(form.currentDue) || 0);
+      // const newCurrentDue= statusChangedToDue ? form.monthlyRent : statusChangedToPaid ? garage.currentDue : (Number(form.monthlyRent - garage.monthlyRent) + Number(form.currentDue) || 0);
+      const newCurrentDue= statusChangedToDue ? form.currentDue : statusChangedToPaid ? shop.currentDue : Number(form.currentDue) || 0;
+      
       await updateGarage(garage.id, {
         garageNo: form.garageNo.trim(),
         ownerName: form.ownerName.trim(),
