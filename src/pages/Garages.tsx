@@ -291,7 +291,6 @@ useEffect(() => {
             type="date"
             value={form.leaseEndDate}
             onChange={e => setForm(p => ({ ...p, leaseEndDate: e.target.value }))}
-            {/* readOnly={form.leaseType !== 'Long-term'} */}
             className={`w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${form.leaseType !== 'Long-term' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50'}`}
           />
           {form.leaseType !== 'Long-term' && (
