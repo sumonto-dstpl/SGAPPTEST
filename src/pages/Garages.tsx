@@ -223,7 +223,7 @@ useEffect(() => {
         startDate: form.startDate, dueDate: form.dueDate,
       });
       showSnackbar(`${garageNo.trim()} added successfully`, 'success');
-      setForm({ ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car', monthlyRent: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '' });
+      setForm({ ownerName: '', mobileNumber: '', vehicleNumber: '', vehicleType: 'Car', monthlyRent: '',currentDue: '', leaseEndDate: '', leaseType: 'Monthly', startDate: '', dueDate: '' });
       onClose();
     } catch { showSnackbar('Failed to add garage', 'error'); }
     finally { setSaving(false); }
