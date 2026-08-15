@@ -351,6 +351,7 @@ function EditShopModal({ shop, onClose, onRequestCollect }: { shop: Shop; onClos
   }
 
   totalPeriods = Math.max(1, totalPeriods);
+    const totalYears = Math.ceil(totalPeriods/12);
 
   const currentDue = (Number(form.monthlyRent) * totalPeriods)-(Number(form.paidRent) || 0);
 
