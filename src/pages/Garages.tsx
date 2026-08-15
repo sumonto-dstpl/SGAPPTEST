@@ -551,7 +551,7 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     garage.startDate.split('-').map(Number);
 
   const [endYear, endMonth, endDay] =
-    form.endDate.split('-').map(Number);
+    form.leaseEndDate.split('-').map(Number);
 
   let totalPeriods: number;
 
