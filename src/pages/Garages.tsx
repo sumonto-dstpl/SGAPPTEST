@@ -363,7 +363,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
       ['Monthly Rent', `INR ${Number(garage.monthlyRent || 0).toLocaleString('en-IN')}`],
       ['Paid Rent', `INR ${Number(garage.paidRent || 0).toLocaleString('en-IN')}`],
       ['Current Due', `INR ${Number(garage.currentDue || 0).toLocaleString('en-IN')}`],
-      ['Lease Type', garage.leaseType || '—'],
+      // ['Lease Type', garage.leaseType || '—'],
       ['Start Date', fmtDate(garage.startDate)],
       ['Lease End Date', fmtDate(garage.leaseEndDate)],
       ['Remark', garage.remark || '—'],
