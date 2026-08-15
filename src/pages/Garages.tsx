@@ -702,14 +702,16 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
           </div>
           <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" value={form.monthlyRent}
   onChange={(value) => set("monthlyRent", value)}/>
+          <Field label="Current Due (₹)" name="currentDue" type="number" value={form.monthlyRent}
+  onChange={(value) => set("monthlyRent", value)}/>
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
-          <div>
+          {/* <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
             <select value={form.leaseType} onChange={e => set('leaseType', e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
               {['Monthly', 'Quarterly', 'Annual'].map(v => <option key={v}>{v}</option>)}
             </select>
-          </div>
+          </div> */}
           <Field label="Start Date" name="startDate" type="date" value={form.startDate}
   onChange={(value) => set("startDate", value)}/>
           <Field label="Lease End Date" name="leaseEndDate" type="date" value={form.leaseEndDate}
