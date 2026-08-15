@@ -125,7 +125,7 @@ useEffect(() => {
     .split('-')
     .map(Number);
 
-  const [endYear, endMonth, endDay] = form.endDate
+  const [endYear, endMonth, endDay] = form.leaseEndDate
     .split('-')
     .map(Number);
 
