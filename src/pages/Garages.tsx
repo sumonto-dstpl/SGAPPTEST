@@ -116,7 +116,7 @@ useEffect(() => {
   }
 }, [form.leaseEndDate]);
   useEffect(() => {
-  if (!form.startDate || !form.endDate || !form.monthlyRent) {
+  if (!form.startDate || !form.leaseEndDate || !form.monthlyRent) {
     setForm(p => ({ ...p, currentDue: '' }));
     return;
   }
