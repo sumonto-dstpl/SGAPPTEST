@@ -617,7 +617,7 @@ function Field({ label, name, type = "text", value, onChange }: FieldProps) {
           <Field label="Monthly Rent (₹)" name="monthlyRent" type="number" value={form.monthlyRent}
   onChange={(value) => set("monthlyRent", value)}/>
           <Field label="Current Due (₹)" name="currentDue" type="number" value={form.currentDue}
-  onChange={(value) => set("monthlyRent", value)}/>
+  onChange={(value) => set("currentDue", value)}/>
           {/* <F label="Paid Rent (₹)" name="paidRent" type="number" /> */}
           {/* <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Lease Type</label>
