@@ -95,7 +95,7 @@ useEffect(() => {
 
     setForm(p => ({
       ...p,
-      endDate: formatDate(endDate),
+      leaseEndDate: formatDate(endDate),
     }));
   }
 }, [form.startDate]);
