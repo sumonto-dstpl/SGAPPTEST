@@ -591,8 +591,8 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
     currentDue: String(currentDue),
   }));
 }, [
-  shop.startDate,
-  shop.shopType,
+  garage.startDate,
+  // garage.shopType,
   form.endDate,
   form.monthlyRent,
     form.paidRent,
