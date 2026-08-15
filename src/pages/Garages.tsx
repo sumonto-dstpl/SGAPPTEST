@@ -66,25 +66,59 @@ function AddGarageModal({ open, onClose }: { open: boolean; onClose: () => void 
   const [garageNo, setGarageNo] = useState(nextNo);
 
   // Autofill end date based on lease type and start date
-  useEffect(() => {
-    if (form.startDate && form.leaseType !== 'Long-term') {
-      const startDate = new Date(form.startDate);
-      let endDate: Date;
-      let dueDate: Date;
+const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
 
-      if (form.leaseType === 'Monthly') {
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-        dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
-      } else {
-        // Yearly
-        endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
-        dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
-      }
+  return `${year}-${month}-${day}`;
+};
+useEffect(() => {
+  if (form.startDate) {
+    const startDate = new Date(form.startDate);
 
-      const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
-    }
-  }, [form.startDate, form.leaseType]);
+    let endDate: Date;
+
+    // if (shopType === 'Rented') {
+      endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate() - 1
+      );
+    // } else {
+    //   endDate = new Date(
+    //     startDate.getFullYear() + 1,
+    //     startDate.getMonth(),
+    //     startDate.getDate() - 1
+    //   );
+    // }
+
+    setForm(p => ({
+      ...p,
+      endDate: formatDate(endDate),
+    }));
+  }
+}, [form.startDate]);
+  
+  // useEffect(() => {
+  //   if (form.startDate && form.leaseType !== 'Long-term') {
+  //     const startDate = new Date(form.startDate);
+  //     let endDate: Date;
+  //     let dueDate: Date;
+
+  //     if (form.leaseType === 'Monthly') {
+  //       endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+  //       dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate()+1);
+  //     } else {
+  //       // Yearly
+  //       endDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate());
+  //       dueDate = new Date(startDate.getFullYear() + 1, startDate.getMonth(), startDate.getDate()+1);
+  //     }
+
+  //     const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  //     setForm(p => ({ ...p, leaseEndDate: formatDate(endDate), dueDate: formatDate(dueDate) }));
+  //   }
+  // }, [form.startDate, form.leaseType]);
 
   // Reset dates when lease type changes
   useEffect(() => {
