@@ -530,8 +530,8 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
 };
 
    useEffect(() => {
-  if (form.endDate) {
-    const [year, month, day] = form.endDate.split('-').map(Number);
+  if (form.leaseEndDate) {
+    const [year, month, day] = form.leaseEndDate.split('-').map(Number);
 
     const dueDate = new Date(year, month - 1, day + 1);
 
@@ -540,10 +540,10 @@ function EditGarageModal({ garage, onClose, onRequestCollect }: { garage: Garage
       dueDate: formatDate(dueDate),
     }));
   }
-}, [form.endDate]);
+}, [form.leaseEndDate]);
 
   useEffect(() => {
-  if (!garage.startDate || !form.endDate || !form.monthlyRent) {
+  if (!garage.startDate || !form.leaseEndDate || !form.monthlyRent) {
     return;
   }
 
