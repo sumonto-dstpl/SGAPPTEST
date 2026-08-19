@@ -238,6 +238,10 @@ const newPayment: PaymentDate = {
     .replace(/[^a-z0-9]/gi, '_');
 
   doc.save(`${safeShopName}_details.pdf`);
+    showSnackbar(
+      `${safeShopName}_details.pdf has been successfully downloaded`,
+      'success',
+    );
 };
 
   const fmtDate = (s: string) => {
