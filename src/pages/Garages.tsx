@@ -436,6 +436,10 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
     .replace(/[^a-z0-9]/gi, '_');
 
   doc.save(`${safeGarageName}_details.pdf`);
+     showSnackbar(
+      `${safeGarageName}_details.pdf has been successfully downloaded`,
+      'success',
+    );
 };
 
 
