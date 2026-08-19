@@ -440,6 +440,7 @@ function GarageDetailModal({ garage, onClose }: { garage: Garage; onClose: () =>
       `${safeGarageName}_details.pdf has been successfully downloaded`,
       'success',
     );
+    onClose();
 };
 
 
