@@ -242,6 +242,7 @@ const newPayment: PaymentDate = {
       `${safeShopName}_details.pdf has been successfully downloaded`,
       'success',
     );
+    onClose();
 };
 
   const fmtDate = (s: string) => {
