@@ -283,7 +283,7 @@ const newPayment: PaymentDate = {
 
       <button
         onClick={handleDownloadPDF}
-        className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-80 transition-colors"
+        className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
       >
         <Printer size={17} /> Print Details
       </button>
